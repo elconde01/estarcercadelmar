@@ -17,17 +17,25 @@
             }
         }
     </script>
+    <style>
+        @media print {
+            body * { visibility: hidden; }
+            #contract-modal, #contract-modal * { visibility: visible; }
+            #contract-modal { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; background: white; }
+            .no-print { display: none; }
+        }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
     <!-- Header adaptable -->
-    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 class="text-xl font-bold text-gray-900">Gestión de Alquileres Temporarios</h1>
             <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
                 <span id="device-indicator" class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">Detectando dispositivo...</span>
-                <button onclick="toggleView('grid')" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">Grilla Ocupación</button>
-                <button onclick="toggleView('list')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Lista / Fechas</button>
+                <button onclick="toggleView('grid')" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">Grilla</button>
+                <button onclick="toggleView('list')" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Lista / Fechas</button>
             </div>
         </div>
     </header>
@@ -38,8 +46,8 @@
         <!-- Alerta de Enlace a Google Forms -->
         <div class="mb-6 bg-blue-50 border-l-4 border-brand-600 p-4 rounded-r-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h3 class="font-semibold text-blue-900">Nuevo Registro de Pasajero</h3>
-                <p class="text-sm text-blue-700">Comparte el enlace del formulario de Google con los pasajeros para la carga de datos y correo electrónico.</p>
+                <h3 class="font-semibold text-blue-900">Formulario de Registro de Pasajeros</h3>
+                <p class="text-sm text-blue-700">El formulario incluye Apellido y Nombre, Documento, Email, Domicilio completo, Celular y Pasajeros/Edades.</p>
             </div>
             <a href="#" id="form-link" target="_blank" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
         </div>
@@ -47,28 +55,43 @@
         <!-- Vista de Grilla (Ocupación) -->
         <section id="view-grid" class="space-y-6">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 overflow-x-auto">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Grilla Visual de Ocupación</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Grilla Visual de Ocupación (Sintética)</h2>
                 <div id="grid-container" class="min-w-[600px]">
-                    <!-- Aquí se renderizará dinámicamente la grilla mediante JS -->
-                    <p class="text-gray-500 text-sm py-8 text-center">Cargando datos de Google Sheets...</p>
+                    <p class="text-gray-500 text-sm py-8 text-center">Conectando con Google Sheets para mostrar días libres y ocupados...</p>
                 </div>
             </div>
         </section>
 
-        <!-- Vista de Lista por Fechas y Disponibilidad (Oculta por defecto) -->
+        <!-- Vista de Lista por Fechas y Disponibilidad -->
         <section id="view-list" class="space-y-6 hidden">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico y Días Libres</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico y Baches Libres</h2>
                 <div id="list-container" class="overflow-x-auto">
-                    <!-- Aquí se renderizará la lista de Check-in/Check-out y baches libres -->
-                    <p class="text-gray-500 text-sm py-8 text-center">Calculando baches de disponibilidad...</p>
+                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas de Check-in/Check-out y días disponibles...</p>
                 </div>
             </div>
         </section>
 
     </main>
 
-    <!-- Script de lógica y responsividad -->
+    <!-- Modal Generador de Contrato -->
+    <div id="contract-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="font-bold text-gray-900 text-lg">Contrato de Locación Temporaria</h3>
+                <button onclick="closeContractModal()" class="text-gray-500 hover:text-gray-700 font-bold px-2 text-xl">&times;</button>
+            </div>
+            <div id="contract-content" class="p-6 overflow-y-auto text-sm leading-relaxed text-gray-700 space-y-4 font-serif">
+                <!-- El texto del contrato inyectado dinámicamente -->
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end gap-3 no-print">
+                <button onclick="closeContractModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cerrar</button>
+                <button onclick="window.print()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700">Imprimir / Guardar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de lógica, adaptabilidad y contratos -->
     <script>
         // Detección automática de dispositivo (Móvil vs PC)
         function checkDevice() {
@@ -93,6 +116,39 @@
                 gridSection.classList.add('hidden');
                 listSection.classList.remove('hidden');
             }
+        }
+
+        // Función para abrir el contrato rellenado con datos de la reserva
+        function generateContract(data) {
+            const modal = document.getElementById('contract-modal');
+            const content = document.getElementById('contract-content');
+
+            const totalMonto = data.monto || "......";
+            const mitadMonto = data.monto ? (data.monto / 2).toLocaleString('es-AR') : "......";
+            const totalMontoFormatted = data.monto ? Number(data.monto).toLocaleString('es-AR') : "......";
+
+            content.innerHTML = `
+                <p class="font-bold text-center text-base mb-4">CONTRATO DE LOCACIÓN POR TEMPORADA</p>
+                <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, quien en adelante será denominado <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, quien acredita su identidad con DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong> con domicilio en: <strong>${data.calle || '[CALLE Y ALTURA]'}</strong>, de la localidad de <strong>${data.localidad || '[LOCALIDAD]'}</strong> CP: <strong>${data.cp || '[CODIGO POSTAL]'}</strong>, provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${data.propiedad || '[DOMICILIO DE LA PROPIEDAD]'}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. EL INMUEBLE LOCADO se entrega con el moblaje en perfecto estado de conservación, instalación y funcionamiento. Al restituir el INMUEBLE LOCADO, deberá devolver LA PARTE LOCADORA todo en el mismo estado recibido, salvo los deterioros que produzcan el buen uso y el transcurso del tiempo, caso contrario responderá por los daños y perjuicios, que involucran reparar lo averiado, reponer lo faltante, más los alquileres perdidos por el lapso insumido en reparaciones. -</p>
+                <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines turísticos de LA PARTE LOCATARIA y su grupo conviviente. Están prohibidas cualesquiera sublocaciones y/o transmisiones, parciales o totales, transitorias o permanentes, gratuitas u onerosas y en general, a todo título y el cambio del destino habitacional.</p>
+                <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> y se pagará 50% ($ <strong>${mitadMonto}</strong>) POR TRANSFERENCIA por adelantado Y EL RESTO ($ <strong>${mitadMonto}</strong>) AL INGRESAR EN EFECTIVO.</p>
+                <p><strong>CUARTA:</strong> Además del alquiler estarán a cargo de LA PARTE LOCATARIA, el pago de la suma pesos CIEN MIL ($ 100.000) en concepto de garantía. Dicha suma será reintegrada luego de la revisión de la propiedad, en el caso de que surgieran daños se descontarán de esta garantía.</p>
+                <p><strong>QUINTA:</strong> El plazo total e improrrogable de este contrato será de <strong>${data.dias || '[DIAS]'}</strong> días, comenzando el <strong>${data.checkin || '[CHECK IN]'}</strong> A PARTIR DE LA 12HS. y finalizando el <strong>${data.checkout || '[CHECK OUT]'}</strong> a las 10 hs. sin obligación de notificar el fenecimiento del plazo.</p>
+                <p><strong>SEXTA:</strong> Al vencimiento del plazo será obligación de LA PARTE LOCATARIA, restituir el INMUEBLE LOCADO con su moblaje sin interpelación alguna, caso contrario deberá pagar a LA PARTE LOCADORA en concepto de cláusula penal, un sobrealquiler por la suma de pesos $ 300.000 POR DÍA, exigible por adelantado, hasta la devolución del INMUEBLE LOCADO y el moblaje en perfectas condiciones, pactándose para su cobro, el procedimiento judicial ejecutivo bastará este contrato, acta de constatación notarial del hecho o acto generador y liquidación por contador público certificando el monto adeudado que corresponda.-</p>
+                <p><strong>SEPTIMA:</strong> Queda prohibida toda modificación y/o mejoras voluntarias, en el INMUEBLE LOCADO mejoras, así sean necesarias y/os urgentes y las toma a su cargo. Asimismo, pagará también el arreglo de todas las averías que acaecieren, renunciando a cualesquiera derechos de repetición y/o retención contra LA PARTE LOCADORA y las dejará en beneficio de LA FINCA LOCADA, sin indemnización alguna. -</p>
+                <p><strong>OCTAVA:</strong> LA PARTE LOCADORA no será responsable por los daños y/o perjuicios que se le produzcan a LA PARTE LOCATARIA o a terceros en sus personas y/o en sus bienes, por causa de roturas, desperfectos, cortocircuitos, filtraciones, derrumbes, incendios, inundaciones, averías y/o accidentes, por cualesquiera causas, ya que LA PARTE LOCATARIA toma a su cargo como riesgo propio, incluso el caso fortuito y la fuerza mayor. -</p>
+                <p><strong>NOVENA:</strong> LA PARTE LOCADORA se reserva el derecho de inspeccionar el INMUEBLE LOCADO, personalmente o con terceros por él designados, en horas diurnas durante todo el plazo contractual con previo aviso. -</p>
+                <p><strong>DÉCIMA:</strong> Quedan constituidos los domicilios especiales, donde tendrán eficacia todas las notificaciones, sean extra o judiciales derivadas del presente contrato, que seguidamente se establecen en el presente contrato.-</p>
+                <p><strong>DÉCIMOPRIMERA:</strong> Para el caso de litigio, las partes se someterán a la competencia judicial, de los Tribunales Ordinarios de LA CIUDAD DE MAR DEL PLATA, renunciando a cualesquiera otras. También renuncian al derecho procesal de recusación sin expresión de causa, del juez que deba conocer. -</p>
+                <p><strong>DÉCIMOSEGUNDA:</strong> Cualquier incumplimiento contractual de LA PARTE LOCATARIA dará derecho a LA PARTE LOCADORA a rescindir este contrato y exigir al desalojo. -</p>
+                <p><strong>DÉCIMOTERCERA:</strong> Todos los anexos y agregados firmados por las partes conforman o integran las declaraciones y estipulaciones del presente acto. -</p>
+                <p><strong>DÉCIMOCUARTA:</strong> Se firman 2 juegos de ejemplares idénticos, de un mismo tenor y a igual efecto, celebrado en la ciudad de MAR DEL PLATA, el día ${data.checkin || '[FECHA]'}.</p>
+            `;
+            modal.classList.remove('hidden');
+        }
+
+        function closeContractModal() {
+            document.getElementById('contract-modal').classList.add('hidden');
         }
 
         window.addEventListener('resize', checkDevice);
