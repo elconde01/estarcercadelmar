@@ -26,53 +26,110 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased" onload="initApp()">
 
     <!-- Header adaptable -->
     <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 class="text-xl font-bold text-gray-900">Gestión de Alquileres Temporarios</h1>
-            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                <span id="device-indicator" class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">Detectando dispositivo...</span>
-                <button onclick="toggleView('grid')" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">Grilla</button>
-                <button onclick="toggleView('list')" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Lista / Fechas</button>
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                <span id="device-indicator" class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">Detectando...</span>
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Panel / Grilla</button>
+                <button onclick="switchTab('properties')" id="btn-properties" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">Administrar Propiedades</button>
             </div>
         </div>
     </header>
 
     <!-- Contenedor Principal -->
-    <main class="max-w-7xl mx-auto px-4 py-6">
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
-        <!-- Alerta de Enlace a Google Forms -->
-        <div class="mb-6 bg-blue-50 border-l-4 border-brand-600 p-4 rounded-r-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-                <h3 class="font-semibold text-blue-900">Formulario de Registro de Pasajeros</h3>
-                <p class="text-sm text-blue-700">El formulario incluye Apellido y Nombre, Documento, Email, Domicilio completo, Celular y Pasajeros/Edades.</p>
-            </div>
-            <a href="#" id="form-link" target="_blank" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
-        </div>
-
-        <!-- Vista de Grilla (Ocupación) -->
-        <section id="view-grid" class="space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 overflow-x-auto">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Grilla Visual de Ocupación (Sintética)</h2>
-                <div id="grid-container" class="min-w-[600px]">
-                    <p class="text-gray-500 text-sm py-8 text-center">Conectando con Google Sheets para mostrar días libres y ocupados...</p>
+        <!-- ================= VISTA 1: PANEL Y GRILLA ================= -->
+        <div id="section-dashboard" class="space-y-6">
+            
+            <!-- Barra de Selección de Propiedad Activa -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <label for="active-property-select" class="font-semibold text-sm text-gray-700 whitespace-nowrap">Propiedad Activa:</label>
+                    <select id="active-property-select" onchange="changeActiveProperty()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-64 focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        <!-- Se llena por JS -->
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button onclick="toggleView('grid')" id="view-btn-grid" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Grilla Ocupación</button>
+                    <button onclick="toggleView('list')" id="view-btn-list" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">Lista / Fechas</button>
                 </div>
             </div>
-        </section>
 
-        <!-- Vista de Lista por Fechas y Disponibilidad -->
-        <section id="view-list" class="space-y-6 hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+            <!-- Alerta de Enlace a Google Forms -->
+            <div class="bg-blue-50 border-l-4 border-brand-600 p-4 rounded-r-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="font-semibold text-blue-900">Formulario de Registro de Pasajeros</h3>
+                    <p class="text-sm text-blue-700">Comparte el link del formulario con el pasajero para registrar sus datos y correo electrónico.</p>
+                </div>
+                <a href="#" id="form-link" target="_blank" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
+            </div>
+
+            <!-- Vista de Grilla (Ocupación) -->
+            <section id="view-grid" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 overflow-x-auto">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Grilla Visual de Ocupación</h2>
+                <div id="grid-container" class="min-w-[600px]">
+                    <p class="text-gray-500 text-sm py-8 text-center">Selecciona una propiedad o configura tus datos para ver la ocupación...</p>
+                </div>
+            </section>
+
+            <!-- Vista de Lista por Fechas y Disponibilidad -->
+            <section id="view-list" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hidden">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico y Baches Libres</h2>
                 <div id="list-container" class="overflow-x-auto">
-                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas de Check-in/Check-out y días disponibles...</p>
+                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas y días disponibles...</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= VISTA 2: ADMIN DE PROPIEDADES ================= -->
+        <div id="section-properties" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Administración de Propiedades</h2>
+                        <p class="text-sm text-gray-500">Agrega, edita o elimina las propiedades que gestionas en la plataforma.</p>
+                    </div>
+                    <button onclick="openPropertyModal()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">+ Nueva Propiedad</button>
+                </div>
+
+                <div id="properties-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Se llena dinámicamente -->
                 </div>
             </div>
-        </section>
+        </div>
 
     </main>
+
+    <!-- Modal Crear / Editar Propiedad -->
+    <div id="property-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+            <h3 id="property-modal-title" class="font-bold text-gray-900 text-lg">Nueva Propiedad</h3>
+            <form id="property-form" onsubmit="saveProperty(event)" class="space-y-4">
+                <input type="hidden" id="prop-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre / Identificador Corto</label>
+                    <input type="text" id="prop-name" required placeholder="Ej: Depto La Perla" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dirección Exacta (Para el Contrato)</label>
+                    <input type="text" id="prop-address" required placeholder="Ej: Av. Luro 1234, Piso 5 Depto A, Mar del Plata" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Capacidad Máxima (Opcional)</label>
+                    <input type="number" id="prop-capacity" placeholder="Ej: 4" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closePropertyModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700">Guardar Propiedad</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Modal Generador de Contrato -->
     <div id="contract-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
@@ -82,7 +139,7 @@
                 <button onclick="closeContractModal()" class="text-gray-500 hover:text-gray-700 font-bold px-2 text-xl">&times;</button>
             </div>
             <div id="contract-content" class="p-6 overflow-y-auto text-sm leading-relaxed text-gray-700 space-y-4 font-serif">
-                <!-- El texto del contrato inyectado dinámicamente -->
+                <!-- Contrato inyectado -->
             </div>
             <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end gap-3 no-print">
                 <button onclick="closeContractModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cerrar</button>
@@ -91,37 +148,226 @@
         </div>
     </div>
 
-    <!-- Script de lógica, adaptabilidad y contratos -->
+    <!-- Script principal de la aplicación -->
     <script>
-        // Detección automática de dispositivo (Móvil vs PC)
+        // Base de datos local de propiedades por defecto si está vacío
+        let properties = JSON.parse(localStorage.getItem('ar_properties')) || [
+            { id: '1', name: 'Depto La Perla', address: 'San Martín 1234, Mar del Plata', capacity: 4 },
+            { id: '2', name: 'Casa Centro', address: 'Belgrano 2345, Mar del Plata', capacity: 6 }
+        ];
+
+        let activePropertyId = properties.length > 0 ? properties[0].id : null;
+
+        function initApp() {
+            checkDevice();
+            renderPropertiesSelect();
+            renderPropertiesAdmin();
+            renderGrid();
+        }
+
         function checkDevice() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
             const indicator = document.getElementById('device-indicator');
             if (isMobile) {
-                indicator.textContent = "Vista Móvil Optimizada";
-                indicator.classList.add("bg-amber-100", "text-amber-800");
+                indicator.textContent = "Móvil";
+                indicator.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
             } else {
-                indicator.textContent = "Vista PC / Escritorio";
-                indicator.classList.add("bg-green-100", "text-green-800");
+                indicator.textContent = "PC";
+                indicator.className = "text-xs px-2 py-1 bg-green-100 text-green-800 rounded";
+            }
+        }
+
+        function switchTab(tab) {
+            const dash = document.getElementById('section-dashboard');
+            const props = document.getElementById('section-properties');
+            const btnDash = document.getElementById('btn-dashboard');
+            const btnProps = document.getElementById('btn-properties');
+
+            if (tab === 'dashboard') {
+                dash.classList.remove('hidden');
+                props.classList.add('hidden');
+                btnDash.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
+                btnProps.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                renderGrid();
+            } else {
+                dash.classList.add('hidden');
+                props.classList.remove('hidden');
+                btnProps.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
+                btnDash.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                renderPropertiesAdmin();
             }
         }
 
         function toggleView(view) {
-            const gridSection = document.getElementById('view-grid');
-            const listSection = document.getElementById('view-list');
+            const grid = document.getElementById('view-grid');
+            const list = document.getElementById('view-list');
+            const btnGrid = document.getElementById('view-btn-grid');
+            const btnList = document.getElementById('view-btn-list');
+
             if (view === 'grid') {
-                gridSection.classList.remove('hidden');
-                listSection.classList.add('hidden');
+                grid.classList.remove('hidden');
+                list.classList.add('hidden');
+                btnGrid.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
+                btnList.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                renderGrid();
             } else {
-                gridSection.classList.add('hidden');
-                listSection.classList.remove('hidden');
+                grid.classList.add('hidden');
+                list.classList.remove('hidden');
+                btnList.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
+                btnGrid.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                renderList();
             }
         }
 
-        // Función para abrir el contrato rellenado con datos de la reserva
+        // --- GESTIÓN DE PROPIEDADES ---
+        function renderPropertiesSelect() {
+            const select = document.getElementById('active-property-select');
+            select.innerHTML = '';
+            if (properties.length === 0) {
+                select.innerHTML = '<option value="">No hay propiedades cargadas</option>';
+                return;
+            }
+            properties.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.name} (${p.address})`;
+                if (p.id === activePropertyId) opt.selected = true;
+                select.appendChild(opt);
+            });
+        }
+
+        function changeActiveProperty() {
+            const select = document.getElementById('active-property-select');
+            activePropertyId = select.value;
+            renderGrid();
+        }
+
+        function renderPropertiesAdmin() {
+            const container = document.getElementById('properties-list-container');
+            container.innerHTML = '';
+            if (properties.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm col-span-2 py-4 text-center">No hay propiedades registradas. Agrega una nueva.</p>';
+                return;
+            }
+            properties.forEach(p => {
+                container.innerHTML += `
+                    <div class="border border-gray-200 rounded-xl p-4 flex flex-col justify-between gap-3 bg-gray-50">
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-base">${p.name}</h4>
+                            <p class="text-sm text-gray-600 mt-1"><strong>Dirección:</strong> ${p.address}</p>
+                            <p class="text-xs text-gray-500 mt-1">Capacidad: ${p.capacity ? p.capacity + ' pasajeros' : 'No especificada'}</p>
+                        </div>
+                        <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
+                            <button onclick="editProperty('${p.id}')" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-100">Editar</button>
+                            <button onclick="deleteProperty('${p.id}')" class="px-3 py-1 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Eliminar</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openPropertyModal(id = null) {
+            document.getElementById('property-modal').classList.remove('hidden');
+            if (id) {
+                document.getElementById('property-modal-title').textContent = "Editar Propiedad";
+                const p = properties.find(item => item.id === id);
+                document.getElementById('prop-id').value = p.id;
+                document.getElementById('prop-name').value = p.name;
+                document.getElementById('prop-address').value = p.address;
+                document.getElementById('prop-capacity').value = p.capacity || '';
+            } else {
+                document.getElementById('property-modal-title').textContent = "Nueva Propiedad";
+                document.getElementById('property-form').reset();
+                document.getElementById('prop-id').value = '';
+            }
+        }
+
+        function closePropertyModal() {
+            document.getElementById('property-modal').classList.add('hidden');
+        }
+
+        function saveProperty(event) {
+            event.preventDefault();
+            const id = document.getElementById('prop-id').value;
+            const name = document.getElementById('prop-name').value;
+            const address = document.getElementById('prop-address').value;
+            const capacity = document.getElementById('prop-capacity').value;
+
+            if (id) {
+                // Editar
+                properties = properties.map(p => p.id === id ? { id, name, address, capacity } : p);
+            } else {
+                // Crear nueva
+                const newId = Date.now().toString();
+                properties.push({ id: newId, name, address, capacity });
+                if (!activePropertyId) activePropertyId = newId;
+            }
+
+            localStorage.setItem('ar_properties', JSON.stringify(properties));
+            closePropertyModal();
+            renderPropertiesSelect();
+            renderPropertiesAdmin();
+            renderGrid();
+        }
+
+        function editProperty(id) {
+            openPropertyModal(id);
+        }
+
+        function deleteProperty(id) {
+            if (confirm('¿Estás seguro de eliminar esta propiedad?')) {
+                properties = properties.filter(p => p.id !== id);
+                localStorage.setItem('ar_properties', JSON.stringify(properties));
+                if (activePropertyId === id) {
+                    activePropertyId = properties.length > 0 ? properties[0].id : null;
+                }
+                renderPropertiesSelect();
+                renderPropertiesAdmin();
+                renderGrid();
+            }
+        }
+
+        // --- GRILLA Y LISTA (Preparadas para recibir datos de Google Sheets) ---
+        function renderGrid() {
+            const container = document.getElementById('grid-container');
+            const activeProp = properties.find(p => p.id === activePropertyId);
+            
+            if (!activeProp) {
+                container.innerHTML = '<p class="text-gray-500 text-sm py-8 text-center">Crea una propiedad para ver su grilla de ocupación.</p>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="mb-4 text-sm text-gray-600">
+                    Mostrando grilla para: <strong class="text-gray-900">${activeProp.name}</strong> (${activeProp.address})
+                </div>
+                <div class="p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
+                    <p class="text-gray-600 text-sm mb-2">Grilla lista para sincronizar con Google Sheets.</p>
+                    <p class="text-xs text-gray-500">Próximamente conectaremos las reservas de esta propiedad específica.</p>
+                </div>
+            `;
+        }
+
+        function renderList() {
+            const container = document.getElementById('list-container');
+            const activeProp = properties.find(p => p.id === activePropertyId);
+
+            container.innerHTML = `
+                <div class="mb-4 text-sm text-gray-600">
+                    Listado cronológico para: <strong class="text-gray-900">${activeProp ? activeProp.name : ''}</strong>
+                </div>
+                <div class="p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
+                    <p class="text-gray-600 text-sm mb-2">Listado de Check-in / Check-out y baches libres en desarrollo.</p>
+                </div>
+            `;
+        }
+
+        // --- GENERADOR DE CONTRATOS (Usa la dirección de la propiedad activa) ---
         function generateContract(data) {
             const modal = document.getElementById('contract-modal');
             const content = document.getElementById('contract-content');
+            const activeProp = properties.find(p => p.id === activePropertyId);
+            const propertyAddress = activeProp ? activeProp.address : '[DOMICILIO DE LA PROPIEDAD]';
 
             const totalMonto = data.monto || "......";
             const mitadMonto = data.monto ? (data.monto / 2).toLocaleString('es-AR') : "......";
@@ -129,7 +375,7 @@
 
             content.innerHTML = `
                 <p class="font-bold text-center text-base mb-4">CONTRATO DE LOCACIÓN POR TEMPORADA</p>
-                <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, quien en adelante será denominado <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, quien acredita su identidad con DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong> con domicilio en: <strong>${data.calle || '[CALLE Y ALTURA]'}</strong>, de la localidad de <strong>${data.localidad || '[LOCALIDAD]'}</strong> CP: <strong>${data.cp || '[CODIGO POSTAL]'}</strong>, provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${data.propiedad || '[DOMICILIO DE LA PROPIEDAD]'}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. EL INMUEBLE LOCADO se entrega con el moblaje en perfecto estado de conservación, instalación y funcionamiento. Al restituir el INMUEBLE LOCADO, deberá devolver LA PARTE LOCADORA todo en el mismo estado recibido, salvo los deterioros que produzcan el buen uso y el transcurso del tiempo, caso contrario responderá por los daños y perjuicios, que involucran reparar lo averiado, reponer lo faltante, más los alquileres perdidos por el lapso insumido en reparaciones. -</p>
+                <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, quien en adelante será denominado <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, quien acredita su identidad con DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong> con domicilio en: <strong>${data.calle || '[CALLE Y ALTURA]'}</strong>, de la localidad de <strong>${data.localidad || '[LOCALIDAD]'}</strong> CP: <strong>${data.cp || '[CODIGO POSTAL]'}</strong>, provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${propertyAddress}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. EL INMUEBLE LOCADO se entrega con el moblaje en perfecto estado de conservación, instalación y funcionamiento. Al restituir el INMUEBLE LOCADO, deberá devolver LA PARTE LOCADORA todo en el mismo estado recibido, salvo los deterioros que produzcan el buen uso y el transcurso del tiempo, caso contrario responderá por los daños y perjuicios, que involucran reparar lo averiado, reponer lo faltante, más los alquileres perdidos por el lapso insumido en reparaciones. -</p>
                 <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines turísticos de LA PARTE LOCATARIA y su grupo conviviente. Están prohibidas cualesquiera sublocaciones y/o transmisiones, parciales o totales, transitorias o permanentes, gratuitas u onerosas y en general, a todo título y el cambio del destino habitacional.</p>
                 <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> y se pagará 50% ($ <strong>${mitadMonto}</strong>) POR TRANSFERENCIA por adelantado Y EL RESTO ($ <strong>${mitadMonto}</strong>) AL INGRESAR EN EFECTIVO.</p>
                 <p><strong>CUARTA:</strong> Además del alquiler estarán a cargo de LA PARTE LOCATARIA, el pago de la suma pesos CIEN MIL ($ 100.000) en concepto de garantía. Dicha suma será reintegrada luego de la revisión de la propiedad, en el caso de que surgieran daños se descontarán de esta garantía.</p>
@@ -152,7 +398,6 @@
         }
 
         window.addEventListener('resize', checkDevice);
-        window.addEventListener('DOMContentLoaded', checkDevice);
     </script>
 </body>
 </html>
