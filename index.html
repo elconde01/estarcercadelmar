@@ -198,23 +198,11 @@
             renderPropertiesSelect();
             renderPropertiesAdmin();
             renderCalendars();
+            renderList();
         }
 
         async function savePropertiesToCloud() {
             await postDataToCloud({ action: 'saveProperties', properties: properties });
-        }
-
-        async function saveReservationRateToCloud(propId, reservationId, montoDiario) {
-            if (!reservations[propId]) return;
-            const res = reservations[propId].find(r => (r.id || r.documento) === reservationId);
-            if (res) {
-                res.montoDiario = montoDiario;
-                res.monto = montoDiario * (res.dias || 1);
-            }
-            await postDataToCloud({ 
-                action: 'saveReservations', 
-                reservations: reservations 
-            });
         }
 
         async function postDataToCloud(payload) {
@@ -311,6 +299,7 @@
         function changeActiveProperty() {
             activePropertyId = document.getElementById('active-property-select').value;
             renderCalendars();
+            renderList();
         }
 
         function openGoogleForm(event) {
@@ -396,7 +385,7 @@
                     `;
                 } else {
                     html += `
-                        <div onclick="openNewReservation('${dateString}')" title="Disponible - Click para registrar reserva" class="h-10 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 transition text-xs">
+                        <div onclick="openNewReservation('${dateString}')" title="Disponible" class="h-10 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 transition text-xs">
                             <span class="font-semibold">${day}</span>
                             <span class="text-[9px] text-emerald-600">Libre</span>
                         </div>
@@ -409,7 +398,7 @@
         }
 
         function openNewReservation(dateStr) {
-            alert(`Día ${dateStr} libre. Próximamente integración directa de reservas.`);
+            // Opcional
         }
 
         function openReservationDetails(res) {
@@ -417,7 +406,7 @@
         }
 
         // --- RENDERIZADO DE LISTA Y CÁLCULO DE MONTOS ---
-function renderList() {
+        function renderList() {
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => p.id === activePropertyId);
             if (!activeProp) {
@@ -454,7 +443,7 @@ function renderList() {
 
                 html += `
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="p-3 font-semibold text-gray-900">${r.nombre}</td>
+                        <td class="p-3 font-semibold text-gray-900">${r.nombre || 'Sin Nombre'}</td>
                         <td class="p-3 text-gray-600">${r.checkin}</td>
                         <td class="p-3 text-gray-600">${r.checkout}</td>
                         <td class="p-3 text-gray-600">${r.dias} días</td>
@@ -480,51 +469,23 @@ function renderList() {
         async function updateMontoDiario(propId, index, value) {
             const numericValue = parseFloat(value) || 0;
             
-            // Actualizar en el objeto local
             if (reservations[propId] && reservations[propId][index]) {
                 reservations[propId][index].montoDiario = numericValue;
                 let dias = reservations[propId][index].dias || 0;
                 let nuevoTotal = numericValue * dias;
                 reservations[propId][index].monto = nuevoTotal;
 
-                // Actualizar visualmente la celda de total en la tabla al instante
                 const totalCell = document.getElementById(`total-${propId}-${index}`);
                 if (totalCell) {
                     totalCell.textContent = `$ ${Number(nuevoTotal).toLocaleString('es-AR')}`;
                 }
 
-                // Guardar automáticamente en la nube (Google Sheets)
                 await saveReservationsToCloud();
             }
         }
 
         async function saveReservationsToCloud() {
             await postDataToCloud({ action: 'saveReservations', reservations: reservations });
-        }
-        async function actualizarMontoDiario(inputElement) {
-            const card = inputElement.closest('.reserva-card');
-            const resId = card.dataset.id;
-            const montoDiario = parseFloat(inputElement.value) || 0;
-            const diasEstadia = parseInt(card.dataset.dias) || 0;
-            
-            const totalGeneral = montoDiario * diasEstadia;
-            
-            card.querySelector('.monto-total-calculado').textContent = totalGeneral.toLocaleString('es-AR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-
-            // Guardar automáticamente en la nube vinculado a este pasajero/reserva
-            await saveReservationRateToCloud(activePropertyId, resId, montoDiario);
-        }
-
-        function generateContractWithCalculatedAmount(res, btnElement) {
-            const card = btnElement.closest('.reserva-card');
-            const totalText = card.querySelector('.monto-total-calculado').textContent.replace(/\./g, '').replace(',', '.');
-            const montoTotal = parseFloat(totalText) || 0;
-            
-            res.monto = montoTotal;
-            generateContract(res);
         }
 
         // --- ADMIN DE PROPIEDADES ---
@@ -627,16 +588,20 @@ function renderList() {
             const activeProp = properties.find(p => p.id === activePropertyId);
             const propertyAddress = activeProp ? activeProp.address : '[DOMICILIO DE LA PROPIEDAD]';
 
-            const mitadMonto = data.monto ? (data.monto / 2).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
-            const totalMontoFormatted = data.monto ? Number(data.monto).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
+            const dias = data.dias || 0;
+            const montoDiario = Number(data.montoDiario) || 0;
+            const montoTotal = data.monto ? Number(data.monto) : (montoDiario * dias);
+            
+            const mitadMonto = montoTotal > 0 ? (montoTotal / 2).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
+            const totalMontoFormatted = montoTotal > 0 ? montoTotal.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
 
             content.innerHTML = `
                 <p class="font-bold text-center text-base mb-4">CONTRATO DE LOCACIÓN POR TEMPORADA</p>
-                <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, en adelante denominada <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong>, con domicilio en: <strong>${data.domicilio || '[DOMICILIO(CALLE, ALTURA, PISO, DEPTO)]'}</strong>, de <strong>${data.localidad || '[LOCALIDAD]'}</strong> (CP: <strong>${data.cp || '[CP]'}</strong>), provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${propertyAddress}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. -</p>
+                <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, en adelante denominada <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong>, con domicilio en: <strong>${data.domicilio || '[CALLE Y ALTURA]'}</strong>, de <strong>${data.localidad || '[LOCALIDAD]'}</strong> (CP: <strong>${data.cp || '[CP]'}</strong>), provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${propertyAddress}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. -</p>
                 <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines turísticos de LA PARTE LOCATARIA y su grupo conviviente. Están prohibidas cualesquiera sublocaciones y/o transmisiones.</p>
-                <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> y se pagará 50% ($ <strong>${mitadMonto}</strong>) POR TRANSFERENCIA por adelantado Y EL RESTO ($ <strong>${mitadMonto}</strong>) AL INGRESAR EN EFECTIVO.</p>
+                <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> (Calculado a razón de $ ${montoDiario.toLocaleString('es-AR')} por día) y se pagará 50% ($ <strong>${mitadMonto}</strong>) POR TRANSFERENCIA por adelantado Y EL RESTO ($ <strong>${mitadMonto}</strong>) AL INGRESAR EN EFECTIVO.</p>
                 <p><strong>CUARTA:</strong> Además del alquiler estarán a cargo de LA PARTE LOCATARIA, el pago de la suma pesos CIEN MIL ($ 100.000) en concepto de garantía.</p>
-                <p><strong>QUINTA:</strong> El plazo total e improrrogable de este contrato será de <strong>${data.dias || '[DIAS]'}</strong> días, comenzando el <strong>${data.checkin || '[CHECK IN]'}</strong> A PARTIR DE LA 12HS. y finalizando el <strong>${data.checkout || '[CHECK OUT]'}</strong> a las 10 hs.</p>
+                <p><strong>QUINTA:</strong> El plazo total e improrrogable de este contrato será de <strong>${dias}</strong> días, comenzando el <strong>${data.checkin || '[CHECK IN]'}</strong> A PARTIR DE LA 12HS. y finalizando el <strong>${data.checkout || '[CHECK OUT]'}</strong> a las 10 hs.</p>
                 <p><strong>SEXTA:</strong> Al vencimiento del plazo será obligación de LA PARTE LOCATARIA restituir el INMUEBLE LOCADO, caso contrario pagará un sobrealquiler de $ 300.000 POR DÍA en concepto de cláusula penal.</p>
                 <p><strong>SEPTIMA:</strong> Queda prohibida toda modificación y/o mejoras voluntarias en el INMUEBLE LOCADO.</p>
                 <p><strong>OCTAVA:</strong> LA PARTE LOCADORA no será responsable por daños, roturas, desperfectos o accidentes en el inmueble.</p>
