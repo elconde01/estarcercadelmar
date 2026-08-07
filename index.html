@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Alquileres Temporarios</title>
+    <!-- Tailwind CSS para diseño responsivo mobile/PC -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#eff6ff', 600: '#2563eb', 700: '#1d4ed8' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <!-- Header adaptable -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h1 class="text-xl font-bold text-gray-900">Gestión de Alquileres Temporarios</h1>
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <span id="device-indicator" class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">Detectando dispositivo...</span>
+                <button onclick="toggleView('grid')" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">Grilla Ocupación</button>
+                <button onclick="toggleView('list')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition">Lista / Fechas</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        
+        <!-- Alerta de Enlace a Google Forms -->
+        <div class="mb-6 bg-blue-50 border-l-4 border-brand-600 p-4 rounded-r-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h3 class="font-semibold text-blue-900">Nuevo Registro de Pasajero</h3>
+                <p class="text-sm text-blue-700">Comparte el enlace del formulario de Google con los pasajeros para la carga de datos y correo electrónico.</p>
+            </div>
+            <a href="#" id="form-link" target="_blank" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
+        </div>
+
+        <!-- Vista de Grilla (Ocupación) -->
+        <section id="view-grid" class="space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 overflow-x-auto">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Grilla Visual de Ocupación</h2>
+                <div id="grid-container" class="min-w-[600px]">
+                    <!-- Aquí se renderizará dinámicamente la grilla mediante JS -->
+                    <p class="text-gray-500 text-sm py-8 text-center">Cargando datos de Google Sheets...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vista de Lista por Fechas y Disponibilidad (Oculta por defecto) -->
+        <section id="view-list" class="space-y-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico y Días Libres</h2>
+                <div id="list-container" class="overflow-x-auto">
+                    <!-- Aquí se renderizará la lista de Check-in/Check-out y baches libres -->
+                    <p class="text-gray-500 text-sm py-8 text-center">Calculando baches de disponibilidad...</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Script de lógica y responsividad -->
+    <script>
+        // Detección automática de dispositivo (Móvil vs PC)
+        function checkDevice() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+            const indicator = document.getElementById('device-indicator');
+            if (isMobile) {
+                indicator.textContent = "Vista Móvil Optimizada";
+                indicator.classList.add("bg-amber-100", "text-amber-800");
+            } else {
+                indicator.textContent = "Vista PC / Escritorio";
+                indicator.classList.add("bg-green-100", "text-green-800");
+            }
+        }
+
+        function toggleView(view) {
+            const gridSection = document.getElementById('view-grid');
+            const listSection = document.getElementById('view-list');
+            if (view === 'grid') {
+                gridSection.classList.remove('hidden');
+                listSection.classList.add('hidden');
+            } else {
+                gridSection.classList.add('hidden');
+                listSection.classList.remove('hidden');
+            }
+        }
+
+        window.addEventListener('resize', checkDevice);
+        window.addEventListener('DOMContentLoaded', checkDevice);
+    </script>
+</body>
+</html>
