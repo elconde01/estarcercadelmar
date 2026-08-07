@@ -34,7 +34,7 @@
             <h1 class="text-xl font-bold text-gray-900">Gestión de Alquileres Temporarios</h1>
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
                 <span id="device-indicator" class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">Detectando...</span>
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Panel / Grilla</button>
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Panel / Calendario</button>
                 <button onclick="switchTab('properties')" id="btn-properties" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">Administrar Propiedades</button>
             </div>
         </div>
@@ -43,7 +43,7 @@
     <!-- Contenedor Principal -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
         
-        <!-- ================= VISTA 1: PANEL Y GRILLA ================= -->
+        <!-- ================= VISTA 1: PANEL Y CALENDARIO ================= -->
         <div id="section-dashboard" class="space-y-6">
             
             <!-- Barra de Selección de Propiedad Activa -->
@@ -55,7 +55,7 @@
                     </select>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <button onclick="toggleView('grid')" id="view-btn-grid" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Grilla Ocupación</button>
+                    <button onclick="toggleView('grid')" id="view-btn-grid" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Calendario Ocupación</button>
                     <button onclick="toggleView('list')" id="view-btn-list" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">Lista / Fechas</button>
                 </div>
             </div>
@@ -64,16 +64,24 @@
             <div class="bg-blue-50 border-l-4 border-brand-600 p-4 rounded-r-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 class="font-semibold text-blue-900">Formulario de Registro de Pasajeros</h3>
-                    <p class="text-sm text-blue-700">Comparte el link del formulario con el pasajero para registrar sus datos y correo electrónico.</p>
+                    <p class="text-sm text-blue-700">Comparte el link del formulario con el pasajero para registrar sus datos, DNI y correo electrónico.</p>
                 </div>
                 <a href="#" id="form-link" target="_blank" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
             </div>
 
-            <!-- Vista de Grilla (Ocupación) -->
-            <section id="view-grid" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 overflow-x-auto">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Grilla Visual de Ocupación</h2>
-                <div id="grid-container" class="min-w-[600px]">
-                    <p class="text-gray-500 text-sm py-8 text-center">Selecciona una propiedad o configura tus datos para ver la ocupación...</p>
+            <!-- Vista de Calendario (Mes en curso y Siguiente) -->
+            <section id="view-grid" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
+                    <h2 class="text-lg font-bold text-gray-900">Grilla de Ocupación (Calendario Mensual)</h2>
+                    <div class="flex items-center gap-4 text-xs font-medium">
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-100 border border-emerald-300 rounded-full inline-block"></span> Disponible</span>
+                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-100 border border-rose-300 rounded-full inline-block"></span> Reservado</span>
+                    </div>
+                </div>
+                
+                <!-- Contenedor Responsivo: PC (lado a lado / md:grid-cols-2), Móvil (arriba y abajo / grid-cols-1) -->
+                <div id="calendar-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Los calendarios se inyectan dinámicamente aquí -->
                 </div>
             </section>
 
@@ -81,7 +89,7 @@
             <section id="view-list" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hidden">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico y Baches Libres</h2>
                 <div id="list-container" class="overflow-x-auto">
-                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas y días disponibles...</p>
+                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas de Check-in/Check-out y días disponibles...</p>
                 </div>
             </section>
         </div>
@@ -148,9 +156,8 @@
         </div>
     </div>
 
-    <!-- Script principal de la aplicación -->
+    <!-- Script principal de la aplicación y calendarios -->
     <script>
-        // Base de datos local de propiedades por defecto si está vacío
         let properties = JSON.parse(localStorage.getItem('ar_properties')) || [
             { id: '1', name: 'Depto La Perla', address: 'San Martín 1234, Mar del Plata', capacity: 4 },
             { id: '2', name: 'Casa Centro', address: 'Belgrano 2345, Mar del Plata', capacity: 6 }
@@ -158,21 +165,31 @@
 
         let activePropertyId = properties.length > 0 ? properties[0].id : null;
 
+        // Simulación temporal de reservas por propiedad para probar la grilla visual
+        // Formato fecha: 'YYYY-MM-DD'
+        let reservations = JSON.parse(localStorage.getItem('ar_reservations')) || {
+            '1': [
+                { checkin: '2026-06-10', checkout: '2026-06-15', nombre: 'Juan Pérez', documento: '25123456', pais: 'Argentina', calle: 'Rivadavia 456', localidad: 'Buenos Aires', cp: '1000', provincia: 'Buenos Aires', monto: 150000, dias: 5 },
+                { checkin: '2026-07-02', checkout: '2026-07-08', nombre: 'María Gómez', documento: '30789456', pais: 'Argentina', calle: 'Corrientes 789', localidad: 'Rosario', cp: '2000', provincia: 'Santa Fe', monto: 200000, dias: 6 }
+            ],
+            '2': []
+        };
+
         function initApp() {
             checkDevice();
             renderPropertiesSelect();
             renderPropertiesAdmin();
-            renderGrid();
+            renderCalendars();
         }
 
         function checkDevice() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
             const indicator = document.getElementById('device-indicator');
             if (isMobile) {
-                indicator.textContent = "Móvil";
+                indicator.textContent = "Móvil (Apilado)";
                 indicator.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
             } else {
-                indicator.textContent = "PC";
+                indicator.textContent = "PC (Doble Panel)";
                 indicator.className = "text-xs px-2 py-1 bg-green-100 text-green-800 rounded";
             }
         }
@@ -188,7 +205,7 @@
                 props.classList.add('hidden');
                 btnDash.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
                 btnProps.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
-                renderGrid();
+                renderCalendars();
             } else {
                 dash.classList.add('hidden');
                 props.classList.remove('hidden');
@@ -209,7 +226,7 @@
                 list.classList.add('hidden');
                 btnGrid.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
                 btnList.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
-                renderGrid();
+                renderCalendars();
             } else {
                 grid.classList.add('hidden');
                 list.classList.remove('hidden');
@@ -219,12 +236,11 @@
             }
         }
 
-        // --- GESTIÓN DE PROPIEDADES ---
         function renderPropertiesSelect() {
             const select = document.getElementById('active-property-select');
             select.innerHTML = '';
             if (properties.length === 0) {
-                select.innerHTML = '<option value="">No hay propiedades cargadas</option>';
+                select.innerHTML = '<option value="">No hay propiedades</option>';
                 return;
             }
             properties.forEach(p => {
@@ -237,18 +253,154 @@
         }
 
         function changeActiveProperty() {
-            const select = document.getElementById('active-property-select');
-            activePropertyId = select.value;
-            renderGrid();
+            activePropertyId = document.getElementById('active-property-select').value;
+            renderCalendars();
         }
 
+        // --- RENDERIZADO DE CALENDARIOS (MES EN CURSO Y SIGUIENTE) ---
+        function renderCalendars() {
+            const container = document.getElementById('calendar-container');
+            const activeProp = properties.find(p => p.id === activePropertyId);
+
+            if (!activeProp) {
+                container.innerHTML = '<p class="text-gray-500 text-sm py-8 text-center col-span-2">Selecciona o crea una propiedad para ver el calendario.</p>';
+                return;
+            }
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth(); // 0 a 11
+
+            // Mes en curso y mes siguiente
+            const month1 = { year: currentYear, month: currentMonth };
+            let nextYear = currentYear;
+            let nextMonth = currentMonth + 1;
+            if (nextMonth > 11) {
+                nextMonth = 0;
+                nextYear++;
+            }
+            const month2 = { year: nextYear, month: nextMonth };
+
+            container.innerHTML = `
+                ${buildMonthHTML(month1.year, month1.month, activeProp.id)}
+                ${buildMonthHTML(month2.year, month2.month, activeProp.id)}
+            `;
+        }
+
+        function buildMonthHTML(year, month, propId) {
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            const daysNames = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
+            
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            // Ajustar para que la semana empiece en Lunes (0 = Lunes, 6 = Domingo)
+            const startingDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            let html = `
+                <div class="border border-gray-200 rounded-xl p-4 bg-white shadow-xs">
+                    <h3 class="font-bold text-gray-900 text-center mb-3 text-base">${monthNames[month]} ${year}</h3>
+                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
+            `;
+
+            daysNames.forEach(d => {
+                html += `<span class="text-xs font-semibold text-gray-500">${d}</span>`;
+            });
+            html += `</div><div class="grid grid-cols-7 gap-1">`;
+
+            // Celdas vacías del inicio del mes
+            for (let i = 0; i < startingDay; i++) {
+                html += `<div class="h-10 bg-gray-50 rounded opacity-30"></div>`;
+            }
+
+            const propReservations = reservations[propId] || [];
+
+            // Días del mes
+            for (let day = 1; day <= totalDays; day++) {
+                const formattedMonth = String(month + 1).padStart(2, '0');
+                const formattedDay = String(day).padStart(2, '0');
+                const dateString = `${year}-${formattedMonth}-${formattedDay}`;
+
+                // Verificar si el día está reservado
+                const res = propReservations.find(r => dateString >= r.checkin && dateString < r.checkout);
+                const isReserved = !!res;
+
+                if (isReserved) {
+                    html += `
+                        <div onclick='openReservationDetails(${JSON.stringify(res)})' title="Reservado - Click para ver contrato y pasajero" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                            <span>${day}</span>
+                            <span class="text-[9px] uppercase tracking-tighter text-rose-600">Ocupado</span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div onclick="openNewReservation('${dateString}')" title="Disponible - Click para registrar reserva" class="h-10 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 transition text-xs">
+                            <span class="font-semibold">${day}</span>
+                            <span class="text-[9px] text-emerald-600">Libre</span>
+                        </div>
+                    `;
+                }
+            }
+
+            html += `</div></div>`;
+            return html;
+        }
+
+        // Acciones al hacer clic en un día libre u ocupado
+        function openNewReservation(dateStr) {
+            alert(`Día ${dateStr} libre. Aquí podrás registrar la nueva reserva o importar los datos desde el formulario de Google.`);
+        }
+
+        function openReservationDetails(res) {
+            generateContract(res);
+        }
+
+        function renderList() {
+            const container = document.getElementById('list-container');
+            const activeProp = properties.find(p => p.id === activePropertyId);
+            const propReservations = reservations[activeProp.id] || [];
+
+            if (propReservations.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-sm py-6 text-center">No hay reservas registradas para ${activeProp.name}.</p>`;
+                return;
+            }
+
+            let html = `
+                <div class="mb-4 text-sm text-gray-600">Listado de reservas y pasajeros para: <strong class="text-gray-900">${activeProp.name}</strong></div>
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 border-b border-gray-200">
+                            <th class="p-3">Pasajero</th>
+                            <th class="p-3">Check-in</th>
+                            <th class="p-3">Check-out</th>
+                            <th class="p-3">Días</th>
+                            <th class="p-3">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            propReservations.forEach(r => {
+                html += `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="p-3 font-semibold text-gray-900">${r.nombre}</td>
+                        <td class="p-3 text-gray-600">${r.checkin}</td>
+                        <td class="p-3 text-gray-600">${r.checkout}</td>
+                        <td class="p-3 text-gray-600">${r.dias} días</td>
+                        <td class="p-3">
+                            <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1 bg-brand-600 text-white rounded text-xs font-medium hover:bg-brand-700">Ver Contrato</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        // --- ADMIN DE PROPIEDADES ---
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
             container.innerHTML = '';
-            if (properties.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm col-span-2 py-4 text-center">No hay propiedades registradas. Agrega una nueva.</p>';
-                return;
-            }
             properties.forEach(p => {
                 container.innerHTML += `
                     <div class="border border-gray-200 rounded-xl p-4 flex flex-col justify-between gap-3 bg-gray-50">
@@ -294,25 +446,23 @@
             const capacity = document.getElementById('prop-capacity').value;
 
             if (id) {
-                // Editar
                 properties = properties.map(p => p.id === id ? { id, name, address, capacity } : p);
             } else {
-                // Crear nueva
                 const newId = Date.now().toString();
                 properties.push({ id: newId, name, address, capacity });
+                reservations[newId] = [];
                 if (!activePropertyId) activePropertyId = newId;
             }
 
             localStorage.setItem('ar_properties', JSON.stringify(properties));
+            localStorage.setItem('ar_reservations', JSON.stringify(reservations));
             closePropertyModal();
             renderPropertiesSelect();
             renderPropertiesAdmin();
-            renderGrid();
+            renderCalendars();
         }
 
-        function editProperty(id) {
-            openPropertyModal(id);
-        }
+        function editProperty(id) { openPropertyModal(id); }
 
         function deleteProperty(id) {
             if (confirm('¿Estás seguro de eliminar esta propiedad?')) {
@@ -323,72 +473,36 @@
                 }
                 renderPropertiesSelect();
                 renderPropertiesAdmin();
-                renderGrid();
+                renderCalendars();
             }
         }
 
-        // --- GRILLA Y LISTA (Preparadas para recibir datos de Google Sheets) ---
-        function renderGrid() {
-            const container = document.getElementById('grid-container');
-            const activeProp = properties.find(p => p.id === activePropertyId);
-            
-            if (!activeProp) {
-                container.innerHTML = '<p class="text-gray-500 text-sm py-8 text-center">Crea una propiedad para ver su grilla de ocupación.</p>';
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="mb-4 text-sm text-gray-600">
-                    Mostrando grilla para: <strong class="text-gray-900">${activeProp.name}</strong> (${activeProp.address})
-                </div>
-                <div class="p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
-                    <p class="text-gray-600 text-sm mb-2">Grilla lista para sincronizar con Google Sheets.</p>
-                    <p class="text-xs text-gray-500">Próximamente conectaremos las reservas de esta propiedad específica.</p>
-                </div>
-            `;
-        }
-
-        function renderList() {
-            const container = document.getElementById('list-container');
-            const activeProp = properties.find(p => p.id === activePropertyId);
-
-            container.innerHTML = `
-                <div class="mb-4 text-sm text-gray-600">
-                    Listado cronológico para: <strong class="text-gray-900">${activeProp ? activeProp.name : ''}</strong>
-                </div>
-                <div class="p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
-                    <p class="text-gray-600 text-sm mb-2">Listado de Check-in / Check-out y baches libres en desarrollo.</p>
-                </div>
-            `;
-        }
-
-        // --- GENERADOR DE CONTRATOS (Usa la dirección de la propiedad activa) ---
+        // --- GENERADOR DE CONTRATOS ---
         function generateContract(data) {
             const modal = document.getElementById('contract-modal');
             const content = document.getElementById('contract-content');
             const activeProp = properties.find(p => p.id === activePropertyId);
             const propertyAddress = activeProp ? activeProp.address : '[DOMICILIO DE LA PROPIEDAD]';
 
-            const totalMonto = data.monto || "......";
             const mitadMonto = data.monto ? (data.monto / 2).toLocaleString('es-AR') : "......";
             const totalMontoFormatted = data.monto ? Number(data.monto).toLocaleString('es-AR') : "......";
 
             content.innerHTML = `
                 <p class="font-bold text-center text-base mb-4">CONTRATO DE LOCACIÓN POR TEMPORADA</p>
-                <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, quien en adelante será denominado <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, quien acredita su identidad con DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong> con domicilio en: <strong>${data.calle || '[CALLE Y ALTURA]'}</strong>, de la localidad de <strong>${data.localidad || '[LOCALIDAD]'}</strong> CP: <strong>${data.cp || '[CODIGO POSTAL]'}</strong>, provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${propertyAddress}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. EL INMUEBLE LOCADO se entrega con el moblaje en perfecto estado de conservación, instalación y funcionamiento. Al restituir el INMUEBLE LOCADO, deberá devolver LA PARTE LOCADORA todo en el mismo estado recibido, salvo los deterioros que produzcan el buen uso y el transcurso del tiempo, caso contrario responderá por los daños y perjuicios, que involucran reparar lo averiado, reponer lo faltante, más los alquileres perdidos por el lapso insumido en reparaciones. -</p>
-                <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines turísticos de LA PARTE LOCATARIA y su grupo conviviente. Están prohibidas cualesquiera sublocaciones y/o transmisiones, parciales o totales, transitorias o permanentes, gratuitas u onerosas y en general, a todo título y el cambio del destino habitacional.</p>
+                <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, en adelante denominada <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong>, con domicilio en: <strong>${data.calle || '[CALLE Y ALTURA]'}</strong>, de <strong>${data.localidad || '[LOCALIDAD]'}</strong> (CP: <strong>${data.cp || '[CP]'}</strong>), provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${propertyAddress}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. -</p>
+                <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines turísticos de LA PARTE LOCATARIA y su grupo conviviente. Están prohibidas cualesquiera sublocaciones y/o transmisiones.</p>
                 <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> y se pagará 50% ($ <strong>${mitadMonto}</strong>) POR TRANSFERENCIA por adelantado Y EL RESTO ($ <strong>${mitadMonto}</strong>) AL INGRESAR EN EFECTIVO.</p>
-                <p><strong>CUARTA:</strong> Además del alquiler estarán a cargo de LA PARTE LOCATARIA, el pago de la suma pesos CIEN MIL ($ 100.000) en concepto de garantía. Dicha suma será reintegrada luego de la revisión de la propiedad, en el caso de que surgieran daños se descontarán de esta garantía.</p>
-                <p><strong>QUINTA:</strong> El plazo total e improrrogable de este contrato será de <strong>${data.dias || '[DIAS]'}</strong> días, comenzando el <strong>${data.checkin || '[CHECK IN]'}</strong> A PARTIR DE LA 12HS. y finalizando el <strong>${data.checkout || '[CHECK OUT]'}</strong> a las 10 hs. sin obligación de notificar el fenecimiento del plazo.</p>
-                <p><strong>SEXTA:</strong> Al vencimiento del plazo será obligación de LA PARTE LOCATARIA, restituir el INMUEBLE LOCADO con su moblaje sin interpelación alguna, caso contrario deberá pagar a LA PARTE LOCADORA en concepto de cláusula penal, un sobrealquiler por la suma de pesos $ 300.000 POR DÍA, exigible por adelantado, hasta la devolución del INMUEBLE LOCADO y el moblaje en perfectas condiciones, pactándose para su cobro, el procedimiento judicial ejecutivo bastará este contrato, acta de constatación notarial del hecho o acto generador y liquidación por contador público certificando el monto adeudado que corresponda.-</p>
-                <p><strong>SEPTIMA:</strong> Queda prohibida toda modificación y/o mejoras voluntarias, en el INMUEBLE LOCADO mejoras, así sean necesarias y/os urgentes y las toma a su cargo. Asimismo, pagará también el arreglo de todas las averías que acaecieren, renunciando a cualesquiera derechos de repetición y/o retención contra LA PARTE LOCADORA y las dejará en beneficio de LA FINCA LOCADA, sin indemnización alguna. -</p>
-                <p><strong>OCTAVA:</strong> LA PARTE LOCADORA no será responsable por los daños y/o perjuicios que se le produzcan a LA PARTE LOCATARIA o a terceros en sus personas y/o en sus bienes, por causa de roturas, desperfectos, cortocircuitos, filtraciones, derrumbes, incendios, inundaciones, averías y/o accidentes, por cualesquiera causas, ya que LA PARTE LOCATARIA toma a su cargo como riesgo propio, incluso el caso fortuito y la fuerza mayor. -</p>
-                <p><strong>NOVENA:</strong> LA PARTE LOCADORA se reserva el derecho de inspeccionar el INMUEBLE LOCADO, personalmente o con terceros por él designados, en horas diurnas durante todo el plazo contractual con previo aviso. -</p>
-                <p><strong>DÉCIMA:</strong> Quedan constituidos los domicilios especiales, donde tendrán eficacia todas las notificaciones, sean extra o judiciales derivadas del presente contrato, que seguidamente se establecen en el presente contrato.-</p>
-                <p><strong>DÉCIMOPRIMERA:</strong> Para el caso de litigio, las partes se someterán a la competencia judicial, de los Tribunales Ordinarios de LA CIUDAD DE MAR DEL PLATA, renunciando a cualesquiera otras. También renuncian al derecho procesal de recusación sin expresión de causa, del juez que deba conocer. -</p>
-                <p><strong>DÉCIMOSEGUNDA:</strong> Cualquier incumplimiento contractual de LA PARTE LOCATARIA dará derecho a LA PARTE LOCADORA a rescindir este contrato y exigir al desalojo. -</p>
-                <p><strong>DÉCIMOTERCERA:</strong> Todos los anexos y agregados firmados por las partes conforman o integran las declaraciones y estipulaciones del presente acto. -</p>
-                <p><strong>DÉCIMOCUARTA:</strong> Se firman 2 juegos de ejemplares idénticos, de un mismo tenor y a igual efecto, celebrado en la ciudad de MAR DEL PLATA, el día ${data.checkin || '[FECHA]'}.</p>
+                <p><strong>CUARTA:</strong> Además del alquiler estarán a cargo de LA PARTE LOCATARIA, el pago de la suma pesos CIEN MIL ($ 100.000) en concepto de garantía.</p>
+                <p><strong>QUINTA:</strong> El plazo total e improrrogable de este contrato será de <strong>${data.dias || '[DIAS]'}</strong> días, comenzando el <strong>${data.checkin || '[CHECK IN]'}</strong> A PARTIR DE LA 12HS. y finalizando el <strong>${data.checkout || '[CHECK OUT]'}</strong> a las 10 hs.</p>
+                <p><strong>SEXTA:</strong> Al vencimiento del plazo será obligación de LA PARTE LOCATARIA restituir el INMUEBLE LOCADO, caso contrario pagará un sobrealquiler de $ 300.000 POR DÍA en concepto de cláusula penal.</p>
+                <p><strong>SEPTIMA:</strong> Queda prohibida toda modificación y/o mejoras voluntarias en el INMUEBLE LOCADO.</p>
+                <p><strong>OCTAVA:</strong> LA PARTE LOCADORA no será responsable por daños, roturas, desperfectos o accidentes en el inmueble.</p>
+                <p><strong>NOVENA:</strong> LA PARTE LOCADORA se reserva el derecho de inspeccionar el inmueble en horas diurnas con previo aviso.</p>
+                <p><strong>DÉCIMA:</strong> Se constituyen los domicilios especiales indicados precedentemente.</p>
+                <p><strong>DÉCIMOPRIMERA:</strong> Para litigios, las partes se someten a la competencia de los Tribunales Ordinarios de LA CIUDAD DE MAR DEL PLATA.</p>
+                <p><strong>DÉCIMOSEGUNDA:</strong> El incumplimiento dará derecho a rescindir y exigir el desalojo.</p>
+                <p><strong>DÉCIMOTERCERA:</strong> Los anexos integran las estipulaciones del presente.</p>
+                <p><strong>DÉCIMOCUARTA:</strong> Se firman 2 ejemplares en MAR DEL PLATA, el día ${data.checkin || '[FECHA]'}.</p>
             `;
             modal.classList.remove('hidden');
         }
