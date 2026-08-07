@@ -33,6 +33,7 @@
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <h1 class="text-xl font-bold text-gray-900">Gestión de Alquileres Temporarios</h1>
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                <span id="sync-status" class="text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded">Sincronizando...</span>
                 <span id="device-indicator" class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">Detectando...</span>
                 <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Panel / Calendario</button>
                 <button onclick="switchTab('properties')" id="btn-properties" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">Administrar Propiedades</button>
@@ -79,7 +80,7 @@
                     </div>
                 </div>
                 
-                <!-- Contenedor Responsivo: PC (lado a lado / md:grid-cols-2), Móvil (arriba y abajo / grid-cols-1) -->
+                <!-- Contenedor Responsivo: PC (lado a lado), Móvil (arriba y abajo) -->
                 <div id="calendar-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Los calendarios se inyectan dinámicamente aquí -->
                 </div>
@@ -100,7 +101,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
                         <h2 class="text-lg font-bold text-gray-900">Administración de Propiedades</h2>
-                        <p class="text-sm text-gray-500">Agrega, edita o elimina las propiedades que gestionas en la plataforma.</p>
+                        <p class="text-sm text-gray-500">Agrega, edita o elimina las propiedades conectadas en la nube.</p>
                     </div>
                     <button onclick="openPropertyModal()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">+ Nueva Propiedad</button>
                 </div>
@@ -156,30 +157,75 @@
         </div>
     </div>
 
-    <!-- Script principal de la aplicación y calendarios -->
+    <!-- Script principal con conexión a Google Sheets -->
     <script>
-        let properties = JSON.parse(localStorage.getItem('ar_properties')) || [
-            { id: '1', name: 'Depto La Perla', address: 'San Martín 1234, Mar del Plata', capacity: 4 },
-            { id: '2', name: 'Casa Centro', address: 'Belgrano 2345, Mar del Plata', capacity: 6 }
-        ];
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwEfY5hj48meiEMJpFFSRcqGLq4DcPoJq0DwYF9P-vUWHDopI7PzGZSC6t9NhnQOIKdg/exec";
 
-        let activePropertyId = properties.length > 0 ? properties[0].id : null;
+        let properties = [];
+        let reservations = {};
+        let activePropertyId = null;
 
-        // Simulación temporal de reservas por propiedad para probar la grilla visual
-        // Formato fecha: 'YYYY-MM-DD'
-        let reservations = JSON.parse(localStorage.getItem('ar_reservations')) || {
-            '1': [
-                { checkin: '2026-06-10', checkout: '2026-06-15', nombre: 'Juan Pérez', documento: '25123456', pais: 'Argentina', calle: 'Rivadavia 456', localidad: 'Buenos Aires', cp: '1000', provincia: 'Buenos Aires', monto: 150000, dias: 5 },
-                { checkin: '2026-07-02', checkout: '2026-07-08', nombre: 'María Gómez', documento: '30789456', pais: 'Argentina', calle: 'Corrientes 789', localidad: 'Rosario', cp: '2000', provincia: 'Santa Fe', monto: 200000, dias: 6 }
-            ],
-            '2': []
-        };
-
-        function initApp() {
+        async function initApp() {
             checkDevice();
+            await loadDataFromCloud();
+        }
+
+        async function loadDataFromCloud() {
+            const statusEl = document.getElementById('sync-status');
+            statusEl.textContent = "Sincronizando...";
+            statusEl.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getData`);
+                const data = await response.json();
+                
+                properties = data.properties || [];
+                reservations = data.reservations || {};
+
+                if (properties.length > 0 && (!activePropertyId || !properties.some(p => p.id === activePropertyId))) {
+                    activePropertyId = properties[0].id;
+                }
+
+                statusEl.textContent = "Sincronizado";
+                statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+            } catch (error) {
+                console.error("Error al cargar datos:", error);
+                statusEl.textContent = "Error de red";
+                statusEl.className = "text-xs px-2 py-1 bg-rose-100 text-rose-800 rounded";
+            }
+
             renderPropertiesSelect();
             renderPropertiesAdmin();
             renderCalendars();
+        }
+
+        async function savePropertiesToCloud() {
+            await postDataToCloud({ action: 'saveProperties', properties: properties });
+        }
+
+        async function saveReservationsToCloud() {
+            await postDataToCloud({ action: 'saveReservations', reservations: reservations });
+        }
+
+        async function postDataToCloud(payload) {
+            const statusEl = document.getElementById('sync-status');
+            statusEl.textContent = "Guardando...";
+            statusEl.className = "text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded";
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Necesario para Google Apps Script Web App
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                statusEl.textContent = "Sincronizado";
+                statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+            } catch (error) {
+                console.error("Error al guardar:", error);
+                statusEl.textContent = "Error al guardar";
+                statusEl.className = "text-xs px-2 py-1 bg-rose-100 text-rose-800 rounded";
+            }
         }
 
         function checkDevice() {
@@ -205,7 +251,7 @@
                 props.classList.add('hidden');
                 btnDash.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
                 btnProps.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
-                renderCalendars();
+                loadDataFromCloud(); // Refrescar al volver al panel
             } else {
                 dash.classList.add('hidden');
                 props.classList.remove('hidden');
@@ -240,7 +286,7 @@
             const select = document.getElementById('active-property-select');
             select.innerHTML = '';
             if (properties.length === 0) {
-                select.innerHTML = '<option value="">No hay propiedades</option>';
+                select.innerHTML = '<option value="">No hay propiedades en la nube</option>';
                 return;
             }
             properties.forEach(p => {
@@ -269,9 +315,8 @@
 
             const now = new Date();
             const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth(); // 0 a 11
+            const currentMonth = now.getMonth();
 
-            // Mes en curso y mes siguiente
             const month1 = { year: currentYear, month: currentMonth };
             let nextYear = currentYear;
             let nextMonth = currentMonth + 1;
@@ -292,7 +337,6 @@
             const daysNames = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"];
             
             const firstDayIndex = new Date(year, month, 1).getDay();
-            // Ajustar para que la semana empiece en Lunes (0 = Lunes, 6 = Domingo)
             const startingDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
             const totalDays = new Date(year, month + 1, 0).getDate();
 
@@ -307,26 +351,23 @@
             });
             html += `</div><div class="grid grid-cols-7 gap-1">`;
 
-            // Celdas vacías del inicio del mes
             for (let i = 0; i < startingDay; i++) {
                 html += `<div class="h-10 bg-gray-50 rounded opacity-30"></div>`;
             }
 
             const propReservations = reservations[propId] || [];
 
-            // Días del mes
             for (let day = 1; day <= totalDays; day++) {
                 const formattedMonth = String(month + 1).padStart(2, '0');
                 const formattedDay = String(day).padStart(2, '0');
                 const dateString = `${year}-${formattedMonth}-${formattedDay}`;
 
-                // Verificar si el día está reservado
                 const res = propReservations.find(r => dateString >= r.checkin && dateString < r.checkout);
                 const isReserved = !!res;
 
                 if (isReserved) {
                     html += `
-                        <div onclick='openReservationDetails(${JSON.stringify(res)})' title="Reservado - Click para ver contrato y pasajero" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                        <div onclick='openReservationDetails(${JSON.stringify(res)})' title="Reservado - Click para ver contrato" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
                             <span>${day}</span>
                             <span class="text-[9px] uppercase tracking-tighter text-rose-600">Ocupado</span>
                         </div>
@@ -345,9 +386,8 @@
             return html;
         }
 
-        // Acciones al hacer clic en un día libre u ocupado
         function openNewReservation(dateStr) {
-            alert(`Día ${dateStr} libre. Aquí podrás registrar la nueva reserva o importar los datos desde el formulario de Google.`);
+            alert(`Día ${dateStr} libre. Próximamente integración directa de reservas.`);
         }
 
         function openReservationDetails(res) {
@@ -357,6 +397,10 @@
         function renderList() {
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => p.id === activePropertyId);
+            if (!activeProp) {
+                container.innerHTML = `<p class="text-gray-500 text-sm py-6 text-center">Selecciona una propiedad.</p>`;
+                return;
+            }
             const propReservations = reservations[activeProp.id] || [];
 
             if (propReservations.length === 0) {
@@ -365,7 +409,7 @@
             }
 
             let html = `
-                <div class="mb-4 text-sm text-gray-600">Listado de reservas y pasajeros para: <strong class="text-gray-900">${activeProp.name}</strong></div>
+                <div class="mb-4 text-sm text-gray-600">Listado de reservas para: <strong class="text-gray-900">${activeProp.name}</strong></div>
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-gray-100 text-gray-700 border-b border-gray-200">
@@ -401,6 +445,10 @@
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
             container.innerHTML = '';
+            if (properties.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm py-4 col-span-2 text-center">No hay propiedades registradas.</p>';
+                return;
+            }
             properties.forEach(p => {
                 container.innerHTML += `
                     <div class="border border-gray-200 rounded-xl p-4 flex flex-col justify-between gap-3 bg-gray-50">
@@ -438,7 +486,7 @@
             document.getElementById('property-modal').classList.add('hidden');
         }
 
-        function saveProperty(event) {
+        async function saveProperty(event) {
             event.preventDefault();
             const id = document.getElementById('prop-id').value;
             const name = document.getElementById('prop-name').value;
@@ -454,26 +502,27 @@
                 if (!activePropertyId) activePropertyId = newId;
             }
 
-            localStorage.setItem('ar_properties', JSON.stringify(properties));
-            localStorage.setItem('ar_reservations', JSON.stringify(reservations));
             closePropertyModal();
             renderPropertiesSelect();
             renderPropertiesAdmin();
             renderCalendars();
+
+            await savePropertiesToCloud();
         }
 
         function editProperty(id) { openPropertyModal(id); }
 
-        function deleteProperty(id) {
+        async function deleteProperty(id) {
             if (confirm('¿Estás seguro de eliminar esta propiedad?')) {
                 properties = properties.filter(p => p.id !== id);
-                localStorage.setItem('ar_properties', JSON.stringify(properties));
                 if (activePropertyId === id) {
                     activePropertyId = properties.length > 0 ? properties[0].id : null;
                 }
                 renderPropertiesSelect();
                 renderPropertiesAdmin();
                 renderCalendars();
+
+                await savePropertiesToCloud();
             }
         }
 
