@@ -70,13 +70,34 @@
                 <a href="#" target="_blank" id="form-link" onclick="openGoogleForm(event)" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
             </div>
             
-            <!-- Vista de Calendario (Mes en curso y Siguiente) -->
+            <!-- Vista de Calendario (Con controles de navegación mes a mes) -->
             <section id="view-grid" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-2">
-                    <h2 class="text-lg font-bold text-gray-900">Grilla de Ocupación (Calendario Mensual)</h2>
-                    <div class="flex items-center gap-4 text-xs font-medium">
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-100 border border-emerald-300 rounded-full inline-block"></span> Disponible</span>
-                        <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-100 border border-rose-300 rounded-full inline-block"></span> Reservado</span>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Grilla de Ocupación (Calendario Mensual)</h2>
+                        <p id="calendar-subtitle" class="text-xs text-gray-500 mt-0.5">Mostrando 2 meses consecutivos</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <!-- Controles de navegación mes a mes -->
+                        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+                            <button onclick="changeMonth(-1)" class="p-2 hover:bg-white rounded-md text-gray-700 transition shadow-xs flex items-center gap-1 text-xs font-medium" title="Mes Anterior">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                                <span class="hidden sm:inline">Anterior</span>
+                            </button>
+                            
+                            <button onclick="resetToCurrentMonth()" class="px-3 py-1.5 hover:bg-white rounded-md text-gray-700 transition text-xs font-medium">Hoy</button>
+                            
+                            <button onclick="changeMonth(1)" class="p-2 hover:bg-white rounded-md text-gray-700 transition shadow-xs flex items-center gap-1 text-xs font-medium" title="Mes Siguiente">
+                                <span class="hidden sm:inline">Siguiente</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-4 text-xs font-medium">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-100 border border-emerald-300 rounded-full inline-block"></span> Disponible</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-100 border border-rose-300 rounded-full inline-block"></span> Reservado</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -157,7 +178,7 @@
         </div>
     </div>
 
-    <!-- Script principal con sincronización de monto diario -->
+    <!-- Script principal con navegación y sincronización -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -165,6 +186,7 @@
         let properties = [];
         let reservations = {};
         let activePropertyId = null;
+        let currentCalendarDate = new Date(); // Variable de estado para controlar la navegación por meses
 
         async function initApp() {
             checkDevice();
@@ -314,7 +336,17 @@
             window.open(formUrl, '_blank');
         }
 
-        // --- RENDERIZADO DE CALENDARIOS ---
+        // --- NAVEGACIÓN Y RENDERIZADO DE CALENDARIOS ---
+        function changeMonth(direction) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+            renderCalendars();
+        }
+
+        function resetToCurrentMonth() {
+            currentCalendarDate = new Date();
+            renderCalendars();
+        }
+
         function renderCalendars() {
             const container = document.getElementById('calendar-container');
             const activeProp = properties.find(p => p.id === activePropertyId);
@@ -324,13 +356,12 @@
                 return;
             }
 
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
+            const baseYear = currentCalendarDate.getFullYear();
+            const baseMonth = currentCalendarDate.getMonth();
 
-            const month1 = { year: currentYear, month: currentMonth };
-            let nextYear = currentYear;
-            let nextMonth = currentMonth + 1;
+            const month1 = { year: baseYear, month: baseMonth };
+            let nextYear = baseYear;
+            let nextMonth = baseMonth + 1;
             if (nextMonth > 11) {
                 nextMonth = 0;
                 nextYear++;
