@@ -67,7 +67,7 @@
                     <h3 class="font-semibold text-blue-900">Formulario de Registro de Pasajeros</h3>
                     <p class="text-sm text-blue-700">Comparte el link del formulario con el pasajero para registrar sus datos, DNI y correo electrónico.</p>
                 </div>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform?usp=publish-editor" target="_blank" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
+                <a href="#" target="_blank" id="form-link" onclick="openGoogleForm(event)" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
             </div>
             
             <!-- Vista de Calendario (Mes en curso y Siguiente) -->
@@ -160,6 +160,7 @@
     <!-- Script principal con conexión a Google Sheets y generación de ID consecutivo -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwEfY5hj48meiEMJpFFSRcqGLq4DcPoJq0DwYF9P-vUWHDopI7PzGZSC6t9NhnQOIKdg/exec";
+        const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
 
         let properties = [];
         let reservations = {};
@@ -297,6 +298,23 @@
         function changeActiveProperty() {
             activePropertyId = document.getElementById('active-property-select').value;
             renderCalendars();
+        }
+
+        // Función para abrir Google Forms pasando dinámicamente el ID de la propiedad activa
+        function openGoogleForm(event) {
+            event.preventDefault();
+            if (!activePropertyId) {
+                alert("Por favor, selecciona una propiedad activa primero.");
+                return;
+            }
+            const activeProp = properties.find(p => p.id === activePropertyId);
+            const propName = activeProp ? activeProp.name : activePropertyId;
+
+            // Nota: Si necesitas que el ID se inyecte en un campo específico de Google Forms, 
+            // reemplaza 'entry.123456789' por el ID 'entry.XXXXX' real de tu formulario.
+            const formUrl = `${BASE_FORM_URL}?usp=pp_url&entry.123456789=${encodeURIComponent(activePropertyId + " - " + propName)}`;
+            
+            window.open(formUrl, '_blank');
         }
 
         // --- RENDERIZADO DE CALENDARIOS ---
@@ -490,10 +508,8 @@
             const capacity = document.getElementById('prop-capacity').value;
 
             if (id) {
-                // Si ya existe (está editando), actualizamos sus datos manteniendo su ID
                 properties = properties.map(p => p.id === id ? { id, name, address, capacity } : p);
             } else {
-                // Si es nuevo, calculamos el mayor ID numérico existente y sumamos 1
                 let maxId = 0;
                 properties.forEach(p => {
                     const numId = parseInt(p.id, 10);
