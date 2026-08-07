@@ -157,7 +157,7 @@
         </div>
     </div>
 
-    <!-- Script principal con conexión a Google Sheets -->
+    <!-- Script principal con conexión a Google Sheets y generación de ID consecutivo -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwEfY5hj48meiEMJpFFSRcqGLq4DcPoJq0DwYF9P-vUWHDopI7PzGZSC6t9NhnQOIKdg/exec";
 
@@ -203,10 +203,6 @@
             await postDataToCloud({ action: 'saveProperties', properties: properties });
         }
 
-        async function saveReservationsToCloud() {
-            await postDataToCloud({ action: 'saveReservations', reservations: reservations });
-        }
-
         async function postDataToCloud(payload) {
             const statusEl = document.getElementById('sync-status');
             statusEl.textContent = "Guardando...";
@@ -215,7 +211,7 @@
             try {
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // Necesario para Google Apps Script Web App
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
@@ -251,7 +247,7 @@
                 props.classList.add('hidden');
                 btnDash.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
                 btnProps.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
-                loadDataFromCloud(); // Refrescar al volver al panel
+                loadDataFromCloud();
             } else {
                 dash.classList.add('hidden');
                 props.classList.remove('hidden');
@@ -303,7 +299,7 @@
             renderCalendars();
         }
 
-        // --- RENDERIZADO DE CALENDARIOS (MES EN CURSO Y SIGUIENTE) ---
+        // --- RENDERIZADO DE CALENDARIOS ---
         function renderCalendars() {
             const container = document.getElementById('calendar-container');
             const activeProp = properties.find(p => p.id === activePropertyId);
@@ -453,7 +449,7 @@
                 container.innerHTML += `
                     <div class="border border-gray-200 rounded-xl p-4 flex flex-col justify-between gap-3 bg-gray-50">
                         <div>
-                            <h4 class="font-bold text-gray-900 text-base">${p.name}</h4>
+                            <h4 class="font-bold text-gray-900 text-base">${p.name} <span class="text-xs text-gray-400 font-normal">(ID: ${p.id})</span></h4>
                             <p class="text-sm text-gray-600 mt-1"><strong>Dirección:</strong> ${p.address}</p>
                             <p class="text-xs text-gray-500 mt-1">Capacidad: ${p.capacity ? p.capacity + ' pasajeros' : 'No especificada'}</p>
                         </div>
@@ -494,9 +490,19 @@
             const capacity = document.getElementById('prop-capacity').value;
 
             if (id) {
+                // Si ya existe (está editando), actualizamos sus datos manteniendo su ID
                 properties = properties.map(p => p.id === id ? { id, name, address, capacity } : p);
             } else {
-                const newId = Date.now().toString();
+                // Si es nuevo, calculamos el mayor ID numérico existente y sumamos 1
+                let maxId = 0;
+                properties.forEach(p => {
+                    const numId = parseInt(p.id, 10);
+                    if (!isNaN(numId) && numId > maxId) {
+                        maxId = numId;
+                    }
+                });
+                const newId = String(maxId + 1);
+
                 properties.push({ id: newId, name, address, capacity });
                 reservations[newId] = [];
                 if (!activePropertyId) activePropertyId = newId;
