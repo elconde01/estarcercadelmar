@@ -183,27 +183,35 @@
             await loadDataFromCloud();
         }
 
-async function loadDataFromCloud() {
+        async function loadDataFromCloud() {
             const statusEl = document.getElementById('sync-status');
-            statusEl.textContent = "Sincronizando...";
-            statusEl.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
+            if (statusEl) {
+                statusEl.textContent = "Sincronizando...";
+                statusEl.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
+            }
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getData`);
+                // Forzamos redirección para evitar bloqueos CORS con ContentService de Apps Script
+                const response = await fetch(`${SCRIPT_URL}?action=getData`, { 
+                    method: 'GET', 
+                    redirect: 'follow' 
+                });
                 const data = await response.json();
                 
                 properties = data.properties || [];
                 
-                // Procesamiento robusto de reservas (soporta objeto agrupado o array plano)
-                const rawReservations = data.reservations || {};
+                // Mapeo seguro y flexible de reservas
                 reservations = {};
                 properties.forEach(p => { reservations[p.id] = []; });
 
-                if (Array.isArray(rawReservations)) {
-                    rawReservations.forEach(r => {
-                        const propId = String(r.PropertyID || r.propertyID || r.property_id || "").trim();
-                        if (propId && reservations[propId]) {
-                            reservations[propId].push({
+                const rawRes = data.reservations || {};
+                
+                // Si la nube nos devuelve un Array plano (ej: desde Sheets directo)
+                if (Array.isArray(rawRes)) {
+                    rawRes.forEach(r => {
+                        const pId = String(r.PropertyID || r.propertyId || r.property_id || "").trim();
+                        if (pId && reservations[pId]) {
+                            reservations[pId].push({
                                 timestamp: r.TimeStamp || r.timestamp || new Date().toISOString(),
                                 nombre: r.Nombre || r.nombre || "",
                                 documento: r.Documento || r.documento || "",
@@ -216,7 +224,7 @@ async function loadDataFromCloud() {
                                 cp: r.CP || r.cp || "",
                                 checkin: r.CheckIn ? r.CheckIn.split('T')[0] : "",
                                 checkout: r.CheckOut ? r.CheckOut.split('T')[0] : "",
-                                propertyId: propId,
+                                propertyId: pId,
                                 montoDiario: Number(r.MontoDiario || r.montoDiario) || 0,
                                 montoTotal: Number(r.MontoTotal || r.montoTotal) || 0,
                                 montoReserva: Number(r.MontoReserva || r.montoReserva) || 0,
@@ -225,19 +233,25 @@ async function loadDataFromCloud() {
                         }
                     });
                 } else {
-                    reservations = rawReservations;
+                    // Si ya viene como un objeto agrupado por ID
+                    reservations = rawRes;
                 }
 
+                // Asignar la primera propiedad como activa por defecto
                 if (properties.length > 0 && (!activePropertyId || !properties.some(p => p.id === activePropertyId))) {
                     activePropertyId = properties[0].id;
                 }
 
-                statusEl.textContent = "Sincronizado";
-                statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+                if (statusEl) {
+                    statusEl.textContent = "Sincronizado";
+                    statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+                }
             } catch (error) {
-                console.error("Error al cargar datos:", error);
-                statusEl.textContent = "Error de red";
-                statusEl.className = "text-xs px-2 py-1 bg-rose-100 text-rose-800 rounded";
+                console.error("Error al sincronizar con Google Sheets:", error);
+                if (statusEl) {
+                    statusEl.textContent = "Error de sincronización";
+                    statusEl.className = "text-xs px-2 py-1 bg-rose-100 text-rose-800 rounded";
+                }
             }
 
             renderPropertiesSelect();
