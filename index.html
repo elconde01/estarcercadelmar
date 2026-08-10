@@ -70,7 +70,7 @@
                 <a href="#" target="_blank" id="form-link" onclick="openGoogleForm(event)" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
             </div>
             
-            <!-- Vista de Calendario (Con controles de navegación mes a mes) -->
+            <!-- Vista de Calendario -->
             <section id="view-grid" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
@@ -79,15 +79,12 @@
                     </div>
                     
                     <div class="flex items-center gap-4 flex-wrap">
-                        <!-- Controles de navegación mes a mes -->
                         <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
                             <button onclick="changeMonth(-1)" class="p-2 hover:bg-white rounded-md text-gray-700 transition shadow-xs flex items-center gap-1 text-xs font-medium" title="Mes Anterior">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                 <span class="hidden sm:inline">Anterior</span>
                             </button>
-                            
                             <button onclick="resetToCurrentMonth()" class="px-3 py-1.5 hover:bg-white rounded-md text-gray-700 transition text-xs font-medium">Hoy</button>
-                            
                             <button onclick="changeMonth(1)" class="p-2 hover:bg-white rounded-md text-gray-700 transition shadow-xs flex items-center gap-1 text-xs font-medium" title="Mes Siguiente">
                                 <span class="hidden sm:inline">Siguiente</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
@@ -101,10 +98,7 @@
                     </div>
                 </div>
                 
-                <!-- Contenedor Responsivo -->
-                <div id="calendar-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Los calendarios se inyectan dinámicamente aquí -->
-                </div>
+                <div id="calendar-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </section>
 
             <!-- Vista de Lista por Fechas y Disponibilidad -->
@@ -127,9 +121,7 @@
                     <button onclick="openPropertyModal()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">+ Nueva Propiedad</button>
                 </div>
 
-                <div id="properties-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Se llena dinámicamente -->
-                </div>
+                <div id="properties-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
         </div>
 
@@ -168,9 +160,7 @@
                 <h3 class="font-bold text-gray-900 text-lg">Contrato de Locación Temporaria</h3>
                 <button onclick="closeContractModal()" class="text-gray-500 hover:text-gray-700 font-bold px-2 text-xl">&times;</button>
             </div>
-            <div id="contract-content" class="p-6 overflow-y-auto text-sm leading-relaxed text-gray-700 space-y-4 font-serif">
-                <!-- Contrato inyectado -->
-            </div>
+            <div id="contract-content" class="p-6 overflow-y-auto text-sm leading-relaxed text-gray-700 space-y-4 font-serif"></div>
             <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end gap-3 no-print">
                 <button onclick="closeContractModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cerrar</button>
                 <button onclick="window.print()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700">Imprimir / Guardar PDF</button>
@@ -411,7 +401,7 @@
                     `;
                 } else {
                     html += `
-                        <div onclick="openNewReservation('${dateString}')" title="Disponible" class="h-10 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 transition text-xs">
+                        <div title="Disponible" class="h-10 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 transition text-xs">
                             <span class="font-semibold">${day}</span>
                             <span class="text-[9px] text-emerald-600">Libre</span>
                         </div>
@@ -423,13 +413,10 @@
             return html;
         }
 
-        function openNewReservation(dateStr) { }
-
         function openReservationDetails(res) {
             generateContract(res);
         }
 
-        // --- RENDERIZADO DE LISTA Y CÁLCULO DE MONTOS Y SEÑAS ---
         function renderList() {
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => p.id === activePropertyId);
@@ -455,7 +442,7 @@
                             <th class="p-3">Días</th>
                             <th class="p-3">Valor Diario ($)</th>
                             <th class="p-3">Total ($)</th>
-                            <th class="p-3">Monto Reserva ($)</th>
+                            <th class="p-3">Señat / Reserva ($)</th>
                             <th class="p-3">Acciones</th>
                         </tr>
                     </thead>
@@ -464,7 +451,7 @@
 
             propReservations.forEach((r, index) => {
                 let montoDiario = r.montoDiario || "";
-                let montoTotal = r.monto || (montoDiario * (r.dias || 0));
+                let montoTotal = r.montoTotal || (montoDiario * (r.dias || 0));
                 let montoReserva = r.montoReserva || "";
 
                 html += `
@@ -475,16 +462,16 @@
                         <td class="p-3 text-gray-600">${r.dias} días</td>
                         <td class="p-3">
                             <input type="number" value="${montoDiario}" placeholder="Ej: 50000" 
-                                onchange="updateMontoDiario('${activeProp.id}', ${index}, this.value)" 
-                                class="border border-gray-300 rounded px-2 py-1 w-28 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                onchange="updateMontos('${activeProp.id}', ${index}, 'montoDiario', this.value)" 
+                                class="border border-gray-300 rounded px-2 py-1 w-24 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
                         </td>
                         <td class="p-3 font-medium text-gray-800" id="total-${activeProp.id}-${index}">
                             $ ${Number(montoTotal).toLocaleString('es-AR')}
                         </td>
                         <td class="p-3">
                             <input type="number" value="${montoReserva}" placeholder="Ej: 20000" 
-                                onchange="updateMontoReserva('${activeProp.id}', ${index}, this.value)" 
-                                class="border border-gray-300 rounded px-2 py-1 w-28 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none bg-amber-50/50">
+                                onchange="updateMontos('${activeProp.id}', ${index}, 'montoReserva', this.value)" 
+                                class="border border-gray-300 rounded px-2 py-1 w-24 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
                         </td>
                         <td class="p-3 flex gap-2">
                             <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1 bg-brand-600 text-white rounded text-xs font-medium hover:bg-brand-700">Ver Contrato</button>
@@ -497,38 +484,25 @@
             container.innerHTML = html;
         }
 
-        async function updateMontoDiario(propId, index, value) {
+        async function updateMontos(propId, index, field, value) {
             const numericValue = parseFloat(value) || 0;
             
             if (reservations[propId] && reservations[propId][index]) {
-                reservations[propId][index].montoDiario = numericValue;
-                let dias = reservations[propId][index].dias || 0;
-                let nuevoTotal = numericValue * dias;
-                reservations[propId][index].monto = nuevoTotal;
-
-                const totalCell = document.getElementById(`total-${propId}-${index}`);
-                if (totalCell) {
-                    totalCell.textContent = `$ ${Number(nuevoTotal).toLocaleString('es-AR')}`;
+                reservations[propId][index][field] = numericValue;
+                
+                if (field === 'montoDiario') {
+                    let dias = reservations[propId][index].dias || 0;
+                    reservations[propId][index].montoTotal = numericValue * dias;
+                    const totalCell = document.getElementById(`total-${propId}-${index}`);
+                    if (totalCell) {
+                        totalCell.textContent = `$ ${Number(reservations[propId][index].montoTotal).toLocaleString('es-AR')}`;
+                    }
                 }
 
-                await saveReservationsToCloud();
+                await postDataToCloud({ action: 'saveReservations', reservations: reservations });
             }
         }
 
-        async function updateMontoReserva(propId, index, value) {
-            const numericValue = parseFloat(value) || 0;
-            
-            if (reservations[propId] && reservations[propId][index]) {
-                reservations[propId][index].montoReserva = numericValue;
-                await saveReservationsToCloud();
-            }
-        }
-
-        async function saveReservationsToCloud() {
-            await postDataToCloud({ action: 'saveReservations', reservations: reservations });
-        }
-
-        // --- ADMIN DE PROPIEDADES ---
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
             container.innerHTML = '';
@@ -621,7 +595,6 @@
             }
         }
 
-        // --- GENERADOR DE CONTRATOS ---
         function generateContract(data) {
             const modal = document.getElementById('contract-modal');
             const content = document.getElementById('contract-content');
@@ -630,16 +603,18 @@
 
             const dias = data.dias || 0;
             const montoDiario = Number(data.montoDiario) || 0;
-            const montoTotal = data.monto ? Number(data.monto) : (montoDiario * dias);
+            const montoTotal = data.montoTotal ? Number(data.montoTotal) : (montoDiario * dias);
+            const montoReserva = Number(data.montoReserva) || 0;
             
-            const mitadMonto = montoTotal > 0 ? (montoTotal / 2).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
             const totalMontoFormatted = montoTotal > 0 ? montoTotal.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
+            const reservaFormatted = montoReserva > 0 ? montoReserva.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
+            const saldoRestante = (montoTotal - montoReserva) > 0 ? (montoTotal - montoReserva).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
 
             content.innerHTML = `
                 <p class="font-bold text-center text-base mb-4">CONTRATO DE LOCACIÓN POR TEMPORADA</p>
                 <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, en adelante denominada <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong>, con domicilio en: <strong>${data.domicilio || '[CALLE Y ALTURA]'}</strong>, de <strong>${data.localidad || '[LOCALIDAD]'}</strong> (CP: <strong>${data.cp || '[CP]'}</strong>), provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${propertyAddress}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. -</p>
                 <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines turísticos de LA PARTE LOCATARIA y su grupo conviviente. Están prohibidas cualesquiera sublocaciones y/o transmisiones.</p>
-                <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> (Calculado a razón de $ ${montoDiario.toLocaleString('es-AR')} por día) y se pagará 50% ($ <strong>${mitadMonto}</strong>) POR TRANSFERENCIA por adelantado Y EL RESTO ($ <strong>${mitadMonto}</strong>) AL INGRESAR EN EFECTIVO.</p>
+                <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> (Calculado a razón de $ ${montoDiario.toLocaleString('es-AR')} por día), pagándose una seña/reserva de $ <strong>${reservaFormatted}</strong> y el saldo restante de $ <strong>${saldoRestante}</strong> al ingresar.</p>
                 <p><strong>CUARTA:</strong> Además del alquiler estarán a cargo de LA PARTE LOCATARIA, el pago de la suma pesos CIEN MIL ($ 100.000) en concepto de garantía.</p>
                 <p><strong>QUINTA:</strong> El plazo total e improrrogable de este contrato será de <strong>${dias}</strong> días, comenzando el <strong>${data.checkin || '[CHECK IN]'}</strong> A PARTIR DE LA 12HS. y finalizando el <strong>${data.checkout || '[CHECK OUT]'}</strong> a las 10 hs.</p>
                 <p><strong>SEXTA:</strong> Al vencimiento del plazo será obligación de LA PARTE LOCATARIA restituir el INMUEBLE LOCADO, caso contrario pagará un sobrealquiler de $ 300.000 POR DÍA en concepto de cláusula penal.</p>
