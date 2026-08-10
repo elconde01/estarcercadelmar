@@ -186,7 +186,7 @@
         let properties = [];
         let reservations = {};
         let activePropertyId = null;
-        let currentCalendarDate = new Date(); // Variable de estado para controlar la navegación por meses
+        let currentCalendarDate = new Date();
 
         async function initApp() {
             checkDevice();
@@ -221,10 +221,6 @@
             renderPropertiesAdmin();
             renderCalendars();
             renderList();
-        }
-
-        async function savePropertiesToCloud() {
-            await postDataToCloud({ action: 'saveProperties', properties: properties });
         }
 
         async function postDataToCloud(payload) {
@@ -336,7 +332,6 @@
             window.open(formUrl, '_blank');
         }
 
-        // --- NAVEGACIÓN Y RENDERIZADO DE CALENDARIOS ---
         function changeMonth(direction) {
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
             renderCalendars();
@@ -428,15 +423,13 @@
             return html;
         }
 
-        function openNewReservation(dateStr) {
-            // Opcional
-        }
+        function openNewReservation(dateStr) { }
 
         function openReservationDetails(res) {
             generateContract(res);
         }
 
-        // --- RENDERIZADO DE LISTA Y CÁLCULO DE MONTOS ---
+        // --- RENDERIZADO DE LISTA Y CÁLCULO DE MONTOS Y SEÑAS ---
         function renderList() {
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => p.id === activePropertyId);
@@ -462,6 +455,7 @@
                             <th class="p-3">Días</th>
                             <th class="p-3">Valor Diario ($)</th>
                             <th class="p-3">Total ($)</th>
+                            <th class="p-3">Monto Reserva ($)</th>
                             <th class="p-3">Acciones</th>
                         </tr>
                     </thead>
@@ -471,6 +465,7 @@
             propReservations.forEach((r, index) => {
                 let montoDiario = r.montoDiario || "";
                 let montoTotal = r.monto || (montoDiario * (r.dias || 0));
+                let montoReserva = r.montoReserva || "";
 
                 html += `
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
@@ -485,6 +480,11 @@
                         </td>
                         <td class="p-3 font-medium text-gray-800" id="total-${activeProp.id}-${index}">
                             $ ${Number(montoTotal).toLocaleString('es-AR')}
+                        </td>
+                        <td class="p-3">
+                            <input type="number" value="${montoReserva}" placeholder="Ej: 20000" 
+                                onchange="updateMontoReserva('${activeProp.id}', ${index}, this.value)" 
+                                class="border border-gray-300 rounded px-2 py-1 w-28 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none bg-amber-50/50">
                         </td>
                         <td class="p-3 flex gap-2">
                             <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1 bg-brand-600 text-white rounded text-xs font-medium hover:bg-brand-700">Ver Contrato</button>
@@ -511,6 +511,15 @@
                     totalCell.textContent = `$ ${Number(nuevoTotal).toLocaleString('es-AR')}`;
                 }
 
+                await saveReservationsToCloud();
+            }
+        }
+
+        async function updateMontoReserva(propId, index, value) {
+            const numericValue = parseFloat(value) || 0;
+            
+            if (reservations[propId] && reservations[propId][index]) {
+                reservations[propId][index].montoReserva = numericValue;
                 await saveReservationsToCloud();
             }
         }
@@ -593,7 +602,7 @@
             renderPropertiesAdmin();
             renderCalendars();
 
-            await savePropertiesToCloud();
+            await postDataToCloud({ action: 'saveProperties', properties: properties });
         }
 
         function editProperty(id) { openPropertyModal(id); }
@@ -608,7 +617,7 @@
                 renderPropertiesAdmin();
                 renderCalendars();
 
-                await savePropertiesToCloud();
+                await postDataToCloud({ action: 'saveProperties', properties: properties });
             }
         }
 
