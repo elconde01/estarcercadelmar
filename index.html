@@ -200,7 +200,7 @@
         </div>
     </div>
 
-    <!-- Script completo con almacenamiento de días y visualización de Saldo Restante -->
+    <!-- Script completo con botones de modificación de fechas y borrado con archivo History -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -245,8 +245,8 @@
                             
                             let calculatedDays = 0;
                             if (checkinStr && checkoutStr) {
-                                let inDate = new Date(checkinStr);
-                                let outDate = new Date(checkoutStr);
+                                let inDate = new Date(checkinStr + 'T00:00:00');
+                                let outDate = new Date(checkoutStr + 'T00:00:00');
                                 let diffTime = outDate - inDate;
                                 calculatedDays = Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24)));
                             }
@@ -285,7 +285,7 @@
                                 const checkoutStr = r.checkout ? r.checkout.split('T')[0] : "";
                                 let calculatedDays = r.dias || 0;
                                 if (checkinStr && checkoutStr) {
-                                    let diff = new Date(checkoutStr) - new Date(checkinStr);
+                                    let diff = new Date(checkoutStr + 'T00:00:00') - new Date(checkinStr + 'T00:00:00');
                                     let cDays = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
                                     if (!calculatedDays) calculatedDays = cDays;
                                 }
@@ -504,15 +504,11 @@
                 const formattedDay = String(day).padStart(2, '0');
                 const dateString = `${year}-${formattedMonth}-${formattedDay}`;
 
-                // Buscar checkout (el día del checkout coincide exactamente con la fecha)
                 const checkoutRes = propReservations.find(r => r.checkout === dateString);
-                // Buscar checkin (el día del checkin coincide exactamente con la fecha)
                 const checkinRes = propReservations.find(r => r.checkin === dateString);
-                // Buscar si está plenamente ocupado (entre checkin y checkout sin ser el día exacto de salida)
                 const fullReservedRes = propReservations.find(r => dateString > r.checkin && dateString < r.checkout);
 
                 if (checkoutRes && checkinRes && checkoutRes !== checkinRes) {
-                    // CASO ESPECIAL: Checkout de una reserva y Checkin de otra el mismo día
                     html += `
                         <div class="h-10 rounded split-day split-day-reserved-checkout border border-gray-300 relative text-[9px] font-bold">
                             <span onclick='openReservationDetails(${JSON.stringify(checkoutRes)})' title="Checkout: ${checkoutRes.nombre}" class="split-triangle-left text-rose-700 cursor-pointer hover:underline">${day}▼</span>
@@ -520,24 +516,22 @@
                         </div>
                     `;
                 } else if (checkoutRes) {
-                    // Día que termina una reserva (cuenta como salida, el resto del día queda libre)
                     html += `
-                        <div onclick='openReservationDetails(${JSON.stringify(checkoutRes)})' title="Checkout (Salida) - Click para ver contrato: ${checkoutRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                        <div onclick='openReservationDetails(${JSON.stringify(checkoutRes)})' title="Checkout (Salida): ${checkoutRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
                             <span>${day}</span>
                             <span class="text-[9px] uppercase tracking-tighter text-rose-600">Salida</span>
                         </div>
                     `;
                 } else if (checkinRes) {
-                    // Día que inicia una reserva
                     html += `
-                        <div onclick='openReservationDetails(${JSON.stringify(checkinRes)})' title="Checkin (Ingreso) - Click para ver contrato: ${checkinRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                        <div onclick='openReservationDetails(${JSON.stringify(checkinRes)})' title="Checkin (Ingreso): ${checkinRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
                             <span>${day}</span>
                             <span class="text-[9px] uppercase tracking-tighter text-rose-600">Ingreso</span>
                         </div>
                     `;
                 } else if (fullReservedRes) {
                     html += `
-                        <div onclick='openReservationDetails(${JSON.stringify(fullReservedRes)})' title="Reservado - Click para ver contrato: ${fullReservedRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                        <div onclick='openReservationDetails(${JSON.stringify(fullReservedRes)})' title="Reservado: ${fullReservedRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
                             <span>${day}</span>
                             <span class="text-[9px] uppercase tracking-tighter text-rose-600">Ocup.</span>
                         </div>
@@ -587,7 +581,7 @@
                             <th class="p-3">Total ($)</th>
                             <th class="p-3">Seña ($)</th>
                             <th class="p-3 font-bold text-blue-800">Saldo Restante ($)</th>
-                            <th class="p-3">Acciones</th>
+                            <th class="p-3 text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -595,7 +589,7 @@
 
             propReservations.forEach((r, index) => {
                 if (r.checkin && r.checkout) {
-                    let diff = new Date(r.checkout) - new Date(r.checkin);
+                    let diff = new Date(r.checkout + 'T00:00:00') - new Date(r.checkin + 'T00:00:00');
                     let calcDays = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
                     r.dias = calcDays;
                 }
@@ -609,8 +603,24 @@
                 html += `
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="p-3 font-semibold text-gray-900">${r.nombre || 'Sin Nombre'}</td>
-                        <td class="p-3 text-gray-600">${r.checkin}</td>
-                        <td class="p-3 text-gray-600">${r.checkout}</td>
+                        <td class="p-3 text-gray-600">
+                            <div class="flex items-center gap-1">
+                                <span>${r.checkin}</span>
+                                <div class="flex flex-col">
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', 1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Sumar un día">▲</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', -1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Restar un día">▼</button>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-3 text-gray-600">
+                            <div class="flex items-center gap-1">
+                                <span>${r.checkout}</span>
+                                <div class="flex flex-col">
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', 1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Sumar un día">▲</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', -1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Restar un día">▼</button>
+                                </div>
+                            </div>
+                        </td>
                         <td class="p-3 text-gray-600 font-medium" id="dias-${activeProp.id}-${index}">${r.dias} días</td>
                         <td class="p-3">
                             <input type="number" value="${montoDiario || ''}" placeholder="Ej: 50000" 
@@ -628,8 +638,9 @@
                         <td class="p-3 font-bold text-blue-700 bg-blue-50/50" id="saldo-${activeProp.id}-${index}">
                             $ ${Number(saldoRestante).toLocaleString('es-AR')}
                         </td>
-                        <td class="p-3 flex gap-2">
+                        <td class="p-3 flex items-center justify-center gap-2">
                             <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1 bg-brand-600 text-white rounded text-xs font-medium hover:bg-brand-700">Ver Contrato</button>
+                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}')" class="px-2.5 py-1 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 transition" title="Borrar y archivar reserva">Borrar</button>
                         </td>
                     </tr>
                 `;
@@ -637,6 +648,57 @@
 
             html += `</tbody></table>`;
             container.innerHTML = html;
+        }
+
+        async function adjustDate(propId, index, field, daysDelta) {
+            if (reservations[propId] && reservations[propId][index]) {
+                let r = reservations[propId][index];
+                let targetDateStr = r[field];
+                if (!targetDateStr) return;
+
+                let d = new Date(targetDateStr + 'T00:00:00');
+                d.setDate(d.getDate() + daysDelta);
+                
+                let newDateStr = d.toISOString().split('T')[0];
+                r[field] = newDateStr;
+
+                // Recalcular días y totales
+                if (r.checkin && r.checkout) {
+                    let diff = new Date(r.checkout + 'T00:00:00') - new Date(r.checkin + 'T00:00:00');
+                    r.dias = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
+                }
+                let montoDiario = r.montoDiario || 0;
+                r.montoTotal = montoDiario * (r.dias || 0);
+
+                renderList();
+                renderCalendars();
+                await postDataToCloud({ action: 'saveReservations', reservations: reservations });
+            }
+        }
+
+        async function deleteReservation(propId, index, clientName) {
+            if (confirm(`¿Estás seguro de eliminar la reserva de ${clientName}? Será removida de la planilla y trasladada a la hoja "History".`)) {
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'deleteReservation', propertyId: propId, reservationIndex: index })
+                    });
+
+                    // Remover localmente también
+                    reservations[propId].splice(index, 1);
+                    renderList();
+                    renderCalendars();
+                    
+                    const statusEl = document.getElementById('sync-status');
+                    statusEl.textContent = "Reserva eliminada y archivada";
+                    statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+                } catch (error) {
+                    console.error("Error al borrar reserva:", error);
+                    alert("Ocurrió un error al intentar eliminar la reserva.");
+                }
+            }
         }
 
         async function updateMontos(propId, index, field, value) {
@@ -647,7 +709,7 @@
                 
                 let r = reservations[propId][index];
                 if (r.checkin && r.checkout) {
-                    let diff = new Date(r.checkout) - new Date(r.checkin);
+                    let diff = new Date(r.checkout + 'T00:00:00') - new Date(r.checkin + 'T00:00:00');
                     r.dias = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
                 }
 
