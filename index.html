@@ -168,7 +168,7 @@
         </div>
     </div>
 
-    <!-- Script completo unificado con almacenamiento automático de días y saldo restante -->
+    <!-- Script completo con almacenamiento de días y visualización de Saldo Restante -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -211,7 +211,6 @@
                             const checkinStr = r.CheckIn ? r.CheckIn.split('T')[0] : (r.checkin ? r.checkin.split('T')[0] : "");
                             const checkoutStr = r.CheckOut ? r.CheckOut.split('T')[0] : (r.checkout ? r.checkout.split('T')[0] : "");
                             
-                            // Cálculo automático de días restando checkout menos checkin
                             let calculatedDays = 0;
                             if (checkinStr && checkoutStr) {
                                 let inDate = new Date(checkinStr);
@@ -607,7 +606,7 @@
                 const diasCell = document.getElementById(`dias-${propId}-${index}`);
                 if (diasCell) diasCell.textContent = `${r.dias} días`;
 
-                // Sincronizar automáticamente con Google Sheets incluyendo los días calculados
+                // Sincronizar automáticamente con Google Sheets incluyendo los días calculados y los montos actualizados
                 await postDataToCloud({ action: 'saveReservations', reservations: reservations });
             }
         }
