@@ -168,7 +168,7 @@
         </div>
     </div>
 
-    <!-- Script principal con navegación y sincronización -->
+    <!-- Script principal con navegación y sincronización corregida para Reservations -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -193,10 +193,58 @@
                 const data = await response.json();
                 
                 properties = data.properties || [];
-                reservations = data.reservations || {};
+                
+                // Procesamiento robusto de reservas adaptado a la estructura de la hoja 'Reservations'
+                const rawReservations = data.reservations || {};
+                reservations = {};
 
-                if (properties.length > 0 && (!activePropertyId || !properties.some(p => p.id === activePropertyId))) {
-                    activePropertyId = properties[0].id;
+                // Si viene como array (por ejemplo filas de la hoja de cálculo), las agrupamos por PropertyID
+                if (Array.isArray(rawReservations)) {
+                    rawReservations.forEach(r => {
+                        // Mapeo exacto de las columnas de Google Forms / Hoja Reservations
+                        const propId = String(r.PropertyID || r.propertyID || r.property_id || "1");
+                        
+                        // Formatear fechas YYYY-MM-DD de forma segura
+                        const checkin = formatDateStr(r.CheckIn || r.checkin);
+                        const checkout = formatDateStr(r.CheckOut || r.checkout);
+                        
+                        if (!checkin || !checkout) return; // Ignorar filas vacías
+
+                        // Calcular días de estadía
+                        const d1 = new Date(checkin);
+                        const d2 = new Date(checkout);
+                        const diffTime = Math.abs(d2 - d1);
+                        const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
+                        const formattedRes = {
+                            nombre: r.Nombre || r.nombre || 'Sin Nombre',
+                            documento: r.Documento || r.documento || '',
+                            pais: r.Pais || r.pais || '',
+                            correo: r.Correo || r.correo || '',
+                            telefono: r.Telefono || r.telefono || '',
+                            domicilio: r.Domicilio || r.domicilio || '',
+                            localidad: r.Localidad || r.localidad || '',
+                            provincia: r.Provincia || r.provincia || '',
+                            cp: r.CP || r.cp || '',
+                            checkin: checkin,
+                            checkout: checkout,
+                            dias: dias,
+                            montoDiario: parseFloat(r.MontoDiario || r.montoDiario) || 0,
+                            montoTotal: parseFloat(r.MontoTotal || r.montoTotal) || 0,
+                            montoReserva: parseFloat(r.MontoReserva || r.montoReserva) || 0
+                        };
+
+                        if (!reservations[propId]) {
+                            reservations[propId] = [];
+                        }
+                        reservations[propId].push(formattedRes);
+                    });
+                } else {
+                    reservations = rawReservations;
+                }
+
+                if (properties.length > 0 && (!activePropertyId || !properties.some(p => String(p.id) === String(activePropertyId)))) {
+                    activePropertyId = String(properties[0].id);
                 }
 
                 statusEl.textContent = "Sincronizado";
@@ -211,6 +259,20 @@
             renderPropertiesAdmin();
             renderCalendars();
             renderList();
+        }
+
+        function formatDateStr(dateVal) {
+            if (!dateVal) return "";
+            if (typeof dateVal === 'string') {
+                return dateVal.split('T')[0].split(' ')[0];
+            }
+            try {
+                const d = new Date(dateVal);
+                if (!isNaN(d.getTime())) {
+                    return d.toISOString().split('T')[0];
+                }
+            } catch (e) {}
+            return String(dateVal);
         }
 
         async function postDataToCloud(payload) {
@@ -299,7 +361,7 @@
                 const opt = document.createElement('option');
                 opt.value = p.id;
                 opt.textContent = `${p.name} (${p.address})`;
-                if (p.id === activePropertyId) opt.selected = true;
+                if (String(p.id) === String(activePropertyId)) opt.selected = true;
                 select.appendChild(opt);
             });
         }
@@ -316,8 +378,9 @@
                 alert("Por favor, selecciona una propiedad activa primero.");
                 return;
             }
-            const activeProp = properties.find(p => p.id === activePropertyId);
+            const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             const propName = activeProp ? activeProp.name : activePropertyId;
+            // Prefill configurado dinámicamente para el campo PropertyID o nombre en Google Forms
             const formUrl = `${BASE_FORM_URL}?usp=pp_url&entry.123456789=${encodeURIComponent(activePropertyId + " - " + propName)}`;
             window.open(formUrl, '_blank');
         }
@@ -334,7 +397,7 @@
 
         function renderCalendars() {
             const container = document.getElementById('calendar-container');
-            const activeProp = properties.find(p => p.id === activePropertyId);
+            const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
 
             if (!activeProp) {
                 container.innerHTML = '<p class="text-gray-500 text-sm py-8 text-center col-span-2">Selecciona o crea una propiedad para ver el calendario.</p>';
@@ -419,7 +482,7 @@
 
         function renderList() {
             const container = document.getElementById('list-container');
-            const activeProp = properties.find(p => p.id === activePropertyId);
+            const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             if (!activeProp) {
                 container.innerHTML = `<p class="text-gray-500 text-sm py-6 text-center">Selecciona una propiedad.</p>`;
                 return;
@@ -442,7 +505,7 @@
                             <th class="p-3">Días</th>
                             <th class="p-3">Valor Diario ($)</th>
                             <th class="p-3">Total ($)</th>
-                            <th class="p-3">Señat / Reserva ($)</th>
+                            <th class="p-3">Seña / Reserva ($)</th>
                             <th class="p-3">Acciones</th>
                         </tr>
                     </thead>
@@ -531,7 +594,7 @@
             document.getElementById('property-modal').classList.remove('hidden');
             if (id) {
                 document.getElementById('property-modal-title').textContent = "Editar Propiedad";
-                const p = properties.find(item => item.id === id);
+                const p = properties.find(item => String(item.id) === String(id));
                 document.getElementById('prop-id').value = p.id;
                 document.getElementById('prop-name').value = p.name;
                 document.getElementById('prop-address').value = p.address;
@@ -555,7 +618,7 @@
             const capacity = document.getElementById('prop-capacity').value;
 
             if (id) {
-                properties = properties.map(p => p.id === id ? { id, name, address, capacity } : p);
+                properties = properties.map(p => String(p.id) === String(id) ? { id, name, address, capacity } : p);
             } else {
                 let maxId = 0;
                 properties.forEach(p => {
@@ -583,8 +646,8 @@
 
         async function deleteProperty(id) {
             if (confirm('¿Estás seguro de eliminar esta propiedad?')) {
-                properties = properties.filter(p => p.id !== id);
-                if (activePropertyId === id) {
+                properties = properties.filter(p => String(p.id) !== String(id));
+                if (String(activePropertyId) === String(id)) {
                     activePropertyId = properties.length > 0 ? properties[0].id : null;
                 }
                 renderPropertiesSelect();
@@ -598,7 +661,7 @@
         function generateContract(data) {
             const modal = document.getElementById('contract-modal');
             const content = document.getElementById('contract-content');
-            const activeProp = properties.find(p => p.id === activePropertyId);
+            const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             const propertyAddress = activeProp ? activeProp.address : '[DOMICILIO DE LA PROPIEDAD]';
 
             const dias = data.dias || 0;
