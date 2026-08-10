@@ -183,7 +183,7 @@
             await loadDataFromCloud();
         }
 
-        async function loadDataFromCloud() {
+async function loadDataFromCloud() {
             const statusEl = document.getElementById('sync-status');
             statusEl.textContent = "Sincronizando...";
             statusEl.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
@@ -194,57 +194,42 @@
                 
                 properties = data.properties || [];
                 
-                // Procesamiento robusto de reservas adaptado a la estructura de la hoja 'Reservations'
+                // Procesamiento robusto de reservas (soporta objeto agrupado o array plano)
                 const rawReservations = data.reservations || {};
                 reservations = {};
+                properties.forEach(p => { reservations[p.id] = []; });
 
-                // Si viene como array (por ejemplo filas de la hoja de cálculo), las agrupamos por PropertyID
                 if (Array.isArray(rawReservations)) {
                     rawReservations.forEach(r => {
-                        // Mapeo exacto de las columnas de Google Forms / Hoja Reservations
-                        const propId = String(r.PropertyID || r.propertyID || r.property_id || "1");
-                        
-                        // Formatear fechas YYYY-MM-DD de forma segura
-                        const checkin = formatDateStr(r.CheckIn || r.checkin);
-                        const checkout = formatDateStr(r.CheckOut || r.checkout);
-                        
-                        if (!checkin || !checkout) return; // Ignorar filas vacías
-
-                        // Calcular días de estadía
-                        const d1 = new Date(checkin);
-                        const d2 = new Date(checkout);
-                        const diffTime = Math.abs(d2 - d1);
-                        const dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-
-                        const formattedRes = {
-                            nombre: r.Nombre || r.nombre || 'Sin Nombre',
-                            documento: r.Documento || r.documento || '',
-                            pais: r.Pais || r.pais || '',
-                            correo: r.Correo || r.correo || '',
-                            telefono: r.Telefono || r.telefono || '',
-                            domicilio: r.Domicilio || r.domicilio || '',
-                            localidad: r.Localidad || r.localidad || '',
-                            provincia: r.Provincia || r.provincia || '',
-                            cp: r.CP || r.cp || '',
-                            checkin: checkin,
-                            checkout: checkout,
-                            dias: dias,
-                            montoDiario: parseFloat(r.MontoDiario || r.montoDiario) || 0,
-                            montoTotal: parseFloat(r.MontoTotal || r.montoTotal) || 0,
-                            montoReserva: parseFloat(r.MontoReserva || r.montoReserva) || 0
-                        };
-
-                        if (!reservations[propId]) {
-                            reservations[propId] = [];
+                        const propId = String(r.PropertyID || r.propertyID || r.property_id || "").trim();
+                        if (propId && reservations[propId]) {
+                            reservations[propId].push({
+                                timestamp: r.TimeStamp || r.timestamp || new Date().toISOString(),
+                                nombre: r.Nombre || r.nombre || "",
+                                documento: r.Documento || r.documento || "",
+                                pais: r.Pais || r.pais || "",
+                                correo: r.Correo || r.correo || "",
+                                telefono: r.Telefono || r.telefono || "",
+                                domicilio: r.Domicilio || r.domicilio || "",
+                                localidad: r.Localidad || r.localidad || "",
+                                provincia: r.Provincia || r.provincia || "",
+                                cp: r.CP || r.cp || "",
+                                checkin: r.CheckIn ? r.CheckIn.split('T')[0] : "",
+                                checkout: r.CheckOut ? r.CheckOut.split('T')[0] : "",
+                                propertyId: propId,
+                                montoDiario: Number(r.MontoDiario || r.montoDiario) || 0,
+                                montoTotal: Number(r.MontoTotal || r.montoTotal) || 0,
+                                montoReserva: Number(r.MontoReserva || r.montoReserva) || 0,
+                                dias: r.dias || 0
+                            });
                         }
-                        reservations[propId].push(formattedRes);
                     });
                 } else {
                     reservations = rawReservations;
                 }
 
-                if (properties.length > 0 && (!activePropertyId || !properties.some(p => String(p.id) === String(activePropertyId)))) {
-                    activePropertyId = String(properties[0].id);
+                if (properties.length > 0 && (!activePropertyId || !properties.some(p => p.id === activePropertyId))) {
+                    activePropertyId = properties[0].id;
                 }
 
                 statusEl.textContent = "Sincronizado";
