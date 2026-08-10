@@ -103,9 +103,9 @@
 
             <!-- Vista de Lista por Fechas y Disponibilidad -->
             <section id="view-list" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hidden">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico, Montos y Contratos</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico, Montos, Saldos y Contratos</h2>
                 <div id="list-container" class="overflow-x-auto">
-                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas de Check-in/Check-out y días disponibles...</p>
+                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas de Check-in/Check-out y saldos pendientes...</p>
                 </div>
             </section>
         </div>
@@ -168,7 +168,7 @@
         </div>
     </div>
 
-    <!-- Script completo unificado con cálculos automáticos de días y totales -->
+    <!-- Script completo unificado con almacenamiento automático de días y saldo restante -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -223,6 +223,7 @@
                             let dias = Number(r.dias || r.Dias || calculatedDays) || calculatedDays;
                             let montoDiario = Number(r.MontoDiario || r.montoDiario) || 0;
                             let montoTotal = Number(r.MontoTotal || r.montoTotal) || (montoDiario * dias);
+                            let montoReserva = Number(r.MontoReserva || r.montoReserva) || 0;
 
                             reservations[pId].push({
                                 timestamp: r.TimeStamp || r.timestamp || new Date().toISOString(),
@@ -240,7 +241,7 @@
                                 propertyId: pId,
                                 montoDiario: montoDiario,
                                 montoTotal: montoTotal,
-                                montoReserva: Number(r.MontoReserva || r.montoReserva) || 0,
+                                montoReserva: montoReserva,
                                 dias: dias
                             });
                         }
@@ -252,19 +253,22 @@
                                 const checkinStr = r.checkin ? r.checkin.split('T')[0] : "";
                                 const checkoutStr = r.checkout ? r.checkout.split('T')[0] : "";
                                 let calculatedDays = r.dias || 0;
-                                if (!calculatedDays && checkinStr && checkoutStr) {
+                                if (checkinStr && checkoutStr) {
                                     let diff = new Date(checkoutStr) - new Date(checkinStr);
-                                    calculatedDays = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
+                                    let cDays = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
+                                    if (!calculatedDays) calculatedDays = cDays;
                                 }
                                 let mDiario = r.montoDiario || 0;
                                 let mTotal = r.montoTotal || (mDiario * calculatedDays);
+                                let mReserva = r.montoReserva || 0;
                                 return {
                                     ...r,
                                     checkin: checkinStr,
                                     checkout: checkoutStr,
                                     dias: calculatedDays,
                                     montoDiario: mDiario,
-                                    montoTotal: mTotal
+                                    montoTotal: mTotal,
+                                    montoReserva: mReserva
                                 };
                             });
                         }
@@ -522,7 +526,8 @@
                             <th class="p-3">Días</th>
                             <th class="p-3">Valor Diario ($)</th>
                             <th class="p-3">Total ($)</th>
-                            <th class="p-3">Seña / Reserva ($)</th>
+                            <th class="p-3">Seña ($)</th>
+                            <th class="p-3 font-bold text-blue-800">Saldo Restante ($)</th>
                             <th class="p-3">Acciones</th>
                         </tr>
                     </thead>
@@ -530,22 +535,24 @@
             `;
 
             propReservations.forEach((r, index) => {
-                if ((!r.dias || r.dias === 0) && r.checkin && r.checkout) {
+                if (r.checkin && r.checkout) {
                     let diff = new Date(r.checkout) - new Date(r.checkin);
-                    r.dias = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
+                    let calcDays = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
+                    r.dias = calcDays;
                 }
 
                 let montoDiario = r.montoDiario || 0;
                 let montoTotal = montoDiario * (r.dias || 0);
                 r.montoTotal = montoTotal;
-                let montoReserva = r.montoReserva || "";
+                let montoReserva = r.montoReserva || 0;
+                let saldoRestante = Math.max(0, montoTotal - montoReserva);
 
                 html += `
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="p-3 font-semibold text-gray-900">${r.nombre || 'Sin Nombre'}</td>
                         <td class="p-3 text-gray-600">${r.checkin}</td>
                         <td class="p-3 text-gray-600">${r.checkout}</td>
-                        <td class="p-3 text-gray-600 font-medium">${r.dias} días</td>
+                        <td class="p-3 text-gray-600 font-medium" id="dias-${activeProp.id}-${index}">${r.dias} días</td>
                         <td class="p-3">
                             <input type="number" value="${montoDiario || ''}" placeholder="Ej: 50000" 
                                 onchange="updateMontos('${activeProp.id}', ${index}, 'montoDiario', this.value)" 
@@ -558,6 +565,9 @@
                             <input type="number" value="${montoReserva || ''}" placeholder="Ej: 20000" 
                                 onchange="updateMontos('${activeProp.id}', ${index}, 'montoReserva', this.value)" 
                                 class="border border-gray-300 rounded px-2 py-1 w-24 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                        </td>
+                        <td class="p-3 font-bold text-blue-700 bg-blue-50/50" id="saldo-${activeProp.id}-${index}">
+                            $ ${Number(saldoRestante).toLocaleString('es-AR')}
                         </td>
                         <td class="p-3 flex gap-2">
                             <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1 bg-brand-600 text-white rounded text-xs font-medium hover:bg-brand-700">Ver Contrato</button>
@@ -576,16 +586,28 @@
             if (reservations[propId] && reservations[propId][index]) {
                 reservations[propId][index][field] = numericValue;
                 
-                if (field === 'montoDiario') {
-                    let dias = reservations[propId][index].dias || 0;
-                    reservations[propId][index].montoTotal = numericValue * dias;
-                    
-                    const totalCell = document.getElementById(`total-${propId}-${index}`);
-                    if (totalCell) {
-                        totalCell.textContent = `$ ${Number(reservations[propId][index].montoTotal).toLocaleString('es-AR')}`;
-                    }
+                let r = reservations[propId][index];
+                if (r.checkin && r.checkout) {
+                    let diff = new Date(r.checkout) - new Date(r.checkin);
+                    r.dias = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
                 }
 
+                let montoDiario = r.montoDiario || 0;
+                r.montoTotal = montoDiario * (r.dias || 0);
+                let montoReserva = r.montoReserva || 0;
+                let saldoRestante = Math.max(0, r.montoTotal - montoReserva);
+
+                // Actualizar UI en vivo sin recargar
+                const totalCell = document.getElementById(`total-${propId}-${index}`);
+                if (totalCell) totalCell.textContent = `$ ${Number(r.montoTotal).toLocaleString('es-AR')}`;
+
+                const saldoCell = document.getElementById(`saldo-${propId}-${index}`);
+                if (saldoCell) saldoCell.textContent = `$ ${Number(saldoRestante).toLocaleString('es-AR')}`;
+
+                const diasCell = document.getElementById(`dias-${propId}-${index}`);
+                if (diasCell) diasCell.textContent = `${r.dias} días`;
+
+                // Sincronizar automáticamente con Google Sheets incluyendo los días calculados
                 await postDataToCloud({ action: 'saveReservations', reservations: reservations });
             }
         }
