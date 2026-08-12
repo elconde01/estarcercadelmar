@@ -11,7 +11,7 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: { 50: '#eff6ff', 600: '#2563eb', 700: '#1d4ed8' }
+                        brand: { 50: '#eef2ff', 100: '#e0e7ff', 600: '#4f46e5', 700: '#4338ca' }
                     }
                 }
             }
@@ -24,6 +24,7 @@
             #contract-modal { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; background: white; }
             .no-print { display: none; }
         }
+        /* Estilos para el día partido (Checkout / Checkin) */
         .split-day {
             position: relative;
             overflow: hidden;
@@ -56,72 +57,102 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased" onload="initApp()">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased" onload="initApp()">
 
     <!-- Header adaptable -->
-    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h1 class="text-xl font-bold text-gray-900">Gestión de Alquileres Temporarios</h1>
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
-                <span id="sync-status" class="text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded">Sincronizando...</span>
-                <span id="device-indicator" class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">Detectando...</span>
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Panel / Calendario</button>
-                <button onclick="switchTab('properties')" id="btn-properties" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">Administrar Propiedades</button>
-                <button onclick="openHistoryModal()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition">Ver Historial / Revivir</button>
+    <header class="bg-white/80 backdrop-blur-md shadow-xs border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-600/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 leading-tight">Gestión de Alquileres</h1>
+                    <p class="text-xs text-slate-500">Panel de administración temporaria</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end flex-wrap">
+                <span id="sync-status" class="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-medium">Sincronizando...</span>
+                <span id="device-indicator" class="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-full font-medium">Detectando...</span>
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Panel / Calendario
+                </button>
+                <button onclick="switchTab('properties')" id="btn-properties" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Propiedades
+                </button>
             </div>
         </div>
     </header>
 
     <!-- Contenedor Principal -->
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         
         <!-- ================= VISTA 1: PANEL Y CALENDARIO ================= -->
         <div id="section-dashboard" class="space-y-6">
             
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <label for="active-property-select" class="font-semibold text-sm text-gray-700 whitespace-nowrap">Propiedad Activa:</label>
-                    <select id="active-property-select" onchange="changeActiveProperty()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-64 focus:ring-2 focus:ring-brand-600 focus:outline-none">
-                    </select>
+            <!-- Barra de Selección de Propiedad Activa -->
+            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3.5 w-full sm:w-auto">
+                    <div class="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <div>
+                        <label for="active-property-select" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Propiedad Activa</label>
+                        <select id="active-property-select" onchange="changeActiveProperty()" class="mt-0.5 bg-transparent font-bold text-slate-800 text-base focus:outline-none cursor-pointer w-full sm:w-72">
+                            <!-- Se llena por JS -->
+                        </select>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <button onclick="toggleView('grid')" id="view-btn-grid" class="px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition">Calendario Ocupación</button>
-                    <button onclick="toggleView('list')" id="view-btn-list" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition">Lista / Fechas</button>
+                <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-end">
+                    <button onclick="toggleView('grid')" id="view-btn-grid" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-xs font-semibold transition shadow-sm">Calendario</button>
+                    <button onclick="toggleView('list')" id="view-btn-list" class="px-4 py-2 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-semibold transition">Lista y Cobros</button>
                 </div>
             </div>
 
-            <div class="bg-blue-50 border-l-4 border-brand-600 p-4 rounded-r-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h3 class="font-semibold text-blue-900">Formulario de Registro de Pasajeros</h3>
-                    <p class="text-sm text-blue-700">Comparte el link del formulario con el pasajero para registrar sus datos, DNI y correo electrónico.</p>
+            <!-- Alerta de Enlace a Google Forms -->
+            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
+                <div class="flex items-start gap-3.5">
+                    <div class="p-2.5 bg-indigo-600 text-white rounded-xl mt-0.5 shadow-sm shadow-indigo-600/30">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-indigo-950 text-sm">Registro de Pasajeros vía Google Forms</h3>
+                        <p class="text-xs text-indigo-700 mt-0.5">Comparte el enlace con el pasajero para autogestionar la carga de sus datos y DNI.</p>
+                    </div>
                 </div>
-                <a href="#" target="_blank" id="form-link" onclick="openGoogleForm(event)" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition whitespace-nowrap">Abrir Google Form</a>
+                <a href="#" target="_blank" id="form-link" onclick="openGoogleForm(event)" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition shadow-sm shadow-indigo-600/20 whitespace-nowrap flex items-center gap-1.5">
+                    Abrir Formulario
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                </a>
             </div>
             
-            <section id="view-grid" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+            <!-- Vista de Calendario -->
+            <section id="view-grid" class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Grilla de Ocupación (Calendario Mensual)</h2>
-                        <p id="calendar-subtitle" class="text-xs text-gray-500 mt-0.5">Mostrando 2 meses consecutivos</p>
+                        <h2 class="text-base font-bold text-slate-900">Grilla de Ocupación</h2>
+                        <p id="calendar-subtitle" class="text-xs text-slate-500 mt-0.5">Vista mensual consecutiva</p>
                     </div>
                     
                     <div class="flex items-center gap-4 flex-wrap">
-                        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-                            <button onclick="changeMonth(-1)" class="p-2 hover:bg-white rounded-md text-gray-700 transition shadow-xs flex items-center gap-1 text-xs font-medium" title="Mes Anterior">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                            <button onclick="changeMonth(-1)" class="px-3 py-1.5 hover:bg-white rounded-lg text-slate-700 transition shadow-xs text-xs font-semibold flex items-center gap-1" title="Mes Anterior">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                                 <span class="hidden sm:inline">Anterior</span>
                             </button>
-                            <button onclick="resetToCurrentMonth()" class="px-3 py-1.5 hover:bg-white rounded-md text-gray-700 transition text-xs font-medium">Hoy</button>
-                            <button onclick="changeMonth(1)" class="p-2 hover:bg-white rounded-md text-gray-700 transition shadow-xs flex items-center gap-1 text-xs font-medium" title="Mes Siguiente">
+                            <button onclick="resetToCurrentMonth()" class="px-3 py-1.5 hover:bg-white rounded-lg text-slate-700 transition text-xs font-semibold shadow-xs">Hoy</button>
+                            <button onclick="changeMonth(1)" class="px-3 py-1.5 hover:bg-white rounded-lg text-slate-700 transition shadow-xs text-xs font-semibold flex items-center gap-1" title="Mes Siguiente">
                                 <span class="hidden sm:inline">Siguiente</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-4 text-xs font-medium">
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-100 border border-emerald-300 rounded-full inline-block"></span> Disponible</span>
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-100 border border-rose-300 rounded-full inline-block"></span> Reservado</span>
-                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-gradient-to-br from-rose-200 to-emerald-200 border border-gray-300 rounded-full inline-block"></span> Checkout / Checkin</span>
+                        <div class="flex items-center gap-3 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200/60 px-3 py-1.5 rounded-xl">
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-400 rounded-full inline-block"></span> Libre</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-rose-400 rounded-full inline-block"></span> Ocupado</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-gradient-to-br from-rose-400 to-emerald-400 rounded-full inline-block"></span> Cambio</span>
                         </div>
                     </div>
                 </div>
@@ -129,23 +160,32 @@
                 <div id="calendar-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </section>
 
-            <section id="view-list" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hidden">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">Listado Cronológico, Montos, Saldos y Contratos</h2>
+            <!-- Vista de Lista por Fechas y Disponibilidad -->
+            <section id="view-list" class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6 hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Listado Cronológico y Saldos</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Control de tarifas, señas y contratos</p>
+                    </div>
+                </div>
                 <div id="list-container" class="overflow-x-auto">
-                    <p class="text-gray-500 text-sm py-8 text-center">Calculando fechas de Check-in/Check-out y saldos pendientes...</p>
+                    <p class="text-slate-400 text-sm py-12 text-center">Calculando fechas y saldos pendientes...</p>
                 </div>
             </section>
         </div>
 
         <!-- ================= VISTA 2: ADMIN DE PROPIEDADES ================= -->
         <div id="section-properties" class="space-y-6 hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-900">Administración de Propiedades</h2>
-                        <p class="text-sm text-gray-500">Agrega, edita o elimina las propiedades conectadas en la nube.</p>
+                        <h2 class="text-base font-bold text-slate-900">Administración de Propiedades</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Configuración de departamentos conectados en Google Sheets</p>
                     </div>
-                    <button onclick="openPropertyModal()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition">+ Nueva Propiedad</button>
+                    <button onclick="openPropertyModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Nueva Propiedad
+                    </button>
                 </div>
 
                 <div id="properties-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -154,63 +194,61 @@
 
     </main>
 
-    <!-- Modal Historial / Revivir Reservas -->
-    <div id="history-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
-                <h3 class="font-bold text-gray-900 text-lg">Historial de Reservas Archivadas (Sheet: History)</h3>
-                <button onclick="closeHistoryModal()" class="text-gray-500 hover:text-gray-700 font-bold px-2 text-xl">&times;</button>
-            </div>
-            <div id="history-content" class="p-6 overflow-y-auto text-sm text-gray-700 space-y-4">
-                <p class="text-center text-gray-500 py-4">Cargando historial...</p>
-            </div>
-            <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end">
-                <button onclick="closeHistoryModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal Crear / Editar Propiedad -->
-    <div id="property-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4">
-            <h3 id="property-modal-title" class="font-bold text-gray-900 text-lg">Nueva Propiedad</h3>
+    <div id="property-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-5 border border-slate-100">
+            <div class="flex justify-between items-center">
+                <h3 id="property-modal-title" class="font-bold text-slate-900 text-base">Nueva Propiedad</h3>
+                <button onclick="closePropertyModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
             <form id="property-form" onsubmit="saveProperty(event)" class="space-y-4">
                 <input type="hidden" id="prop-id">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre / Identificador Corto</label>
-                    <input type="text" id="prop-name" required placeholder="Ej: Depto La Perla" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Nombre / Identificador</label>
+                    <input type="text" id="prop-name" required placeholder="Ej: Depto La Perla" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none bg-slate-50/50">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Dirección Exacta (Para el Contrato)</label>
-                    <input type="text" id="prop-address" required placeholder="Ej: Av. Luro 1234, Piso 5 Depto A, Mar del Plata" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Dirección Exacta (Para Contrato)</label>
+                    <input type="text" id="prop-address" required placeholder="Ej: Av. Luro 1234, Mar del Plata" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none bg-slate-50/50">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Capacidad Máxima (Opcional)</label>
-                    <input type="number" id="prop-capacity" placeholder="Ej: 4" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Capacidad Máxima (Pasajeros)</label>
+                    <input type="number" id="prop-capacity" placeholder="Ej: 4" class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none bg-slate-50/50">
                 </div>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="closePropertyModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700">Guardar Propiedad</button>
+                <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closePropertyModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm shadow-brand-600/20">Guardar Propiedad</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal Generador de Contrato -->
-    <div id="contract-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
-            <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
-                <h3 class="font-bold text-gray-900 text-lg">Contrato de Locación Temporaria</h3>
-                <button onclick="closeContractModal()" class="text-gray-500 hover:text-gray-700 font-bold px-2 text-xl">&times;</button>
+    <div id="contract-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col border border-slate-100 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/75">
+                <div class="flex items-center gap-2.5">
+                    <div class="p-2 bg-brand-600 text-white rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-slate-900 text-base">Contrato de Locación Temporaria</h3>
+                </div>
+                <button onclick="closeContractModal()" class="text-slate-400 hover:text-slate-600 p-1 text-xl font-bold">&times;</button>
             </div>
-            <div id="contract-content" class="p-6 overflow-y-auto text-sm leading-relaxed text-gray-700 space-y-4 font-serif"></div>
-            <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl flex justify-end gap-3 no-print">
-                <button onclick="closeContractModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">Cerrar</button>
-                <button onclick="window.print()" class="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700">Imprimir / Guardar PDF</button>
+            <div id="contract-content" class="p-8 overflow-y-auto text-xs sm:text-sm leading-relaxed text-slate-700 space-y-4 font-serif"></div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50/75 flex justify-end gap-3 no-print">
+                <button onclick="closeContractModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-semibold transition">Cerrar</button>
+                <button onclick="window.print()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Imprimir / PDF
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- Script completo con lógica intacta -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -229,7 +267,7 @@
             const statusEl = document.getElementById('sync-status');
             if (statusEl) {
                 statusEl.textContent = "Sincronizando...";
-                statusEl.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
+                statusEl.className = "text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-medium";
             }
 
             try {
@@ -322,13 +360,13 @@
 
                 if (statusEl) {
                     statusEl.textContent = "Sincronizado";
-                    statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+                    statusEl.className = "text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium";
                 }
             } catch (error) {
                 console.error("Error al sincronizar con Google Sheets:", error);
                 if (statusEl) {
                     statusEl.textContent = "Error de sincronización";
-                    statusEl.className = "text-xs px-2 py-1 bg-rose-100 text-rose-800 rounded";
+                    statusEl.className = "text-xs px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full font-medium";
                 }
             }
 
@@ -341,7 +379,7 @@
         async function postDataToCloud(payload) {
             const statusEl = document.getElementById('sync-status');
             statusEl.textContent = "Guardando...";
-            statusEl.className = "text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded";
+            statusEl.className = "text-xs px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full font-medium";
 
             try {
                 await fetch(SCRIPT_URL, {
@@ -351,11 +389,11 @@
                     body: JSON.stringify(payload)
                 });
                 statusEl.textContent = "Sincronizado";
-                statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+                statusEl.className = "text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium";
             } catch (error) {
                 console.error("Error al guardar:", error);
                 statusEl.textContent = "Error al guardar";
-                statusEl.className = "text-xs px-2 py-1 bg-rose-100 text-rose-800 rounded";
+                statusEl.className = "text-xs px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full font-medium";
             }
         }
 
@@ -363,11 +401,11 @@
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
             const indicator = document.getElementById('device-indicator');
             if (isMobile) {
-                indicator.textContent = "Móvil (Apilado)";
-                indicator.className = "text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded";
+                indicator.textContent = "Móvil";
+                indicator.className = "text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-medium";
             } else {
-                indicator.textContent = "PC (Doble Panel)";
-                indicator.className = "text-xs px-2 py-1 bg-green-100 text-green-800 rounded";
+                indicator.textContent = "Escritorio";
+                indicator.className = "text-xs px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-full font-medium";
             }
         }
 
@@ -380,14 +418,14 @@
             if (tab === 'dashboard') {
                 dash.classList.remove('hidden');
                 props.classList.add('hidden');
-                btnDash.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
-                btnProps.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                btnDash.className = "px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5";
+                btnProps.className = "px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5";
                 loadDataFromCloud();
             } else {
                 dash.classList.add('hidden');
                 props.classList.remove('hidden');
-                btnProps.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
-                btnDash.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                btnProps.className = "px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5";
+                btnDash.className = "px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5";
                 renderPropertiesAdmin();
             }
         }
@@ -401,14 +439,14 @@
             if (view === 'grid') {
                 grid.classList.remove('hidden');
                 list.classList.add('hidden');
-                btnGrid.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
-                btnList.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                btnGrid.className = "px-4 py-2 bg-brand-600 text-white rounded-lg text-xs font-semibold transition shadow-sm";
+                btnList.className = "px-4 py-2 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-semibold transition";
                 renderCalendars();
             } else {
                 grid.classList.add('hidden');
                 list.classList.remove('hidden');
-                btnList.className = "px-3 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium transition";
-                btnGrid.className = "px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition";
+                btnList.className = "px-4 py-2 bg-brand-600 text-white rounded-lg text-xs font-semibold transition shadow-sm";
+                btnGrid.className = "px-4 py-2 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-semibold transition";
                 renderList();
             }
         }
@@ -417,13 +455,13 @@
             const select = document.getElementById('active-property-select');
             select.innerHTML = '';
             if (properties.length === 0) {
-                select.innerHTML = '<option value="">No hay propiedades en la nube</option>';
+                select.innerHTML = '<option value="">No hay propiedades</option>';
                 return;
             }
             properties.forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.id;
-                opt.textContent = `${p.name} (${p.address})`;
+                opt.textContent = `${p.name} - ${p.address}`;
                 if (String(p.id) === String(activePropertyId)) opt.selected = true;
                 select.appendChild(opt);
             });
@@ -462,7 +500,7 @@
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
 
             if (!activeProp) {
-                container.innerHTML = '<p class="text-gray-500 text-sm py-8 text-center col-span-2">Selecciona o crea una propiedad para ver el calendario.</p>';
+                container.innerHTML = '<p class="text-slate-400 text-sm py-12 text-center col-span-2">Selecciona o crea una propiedad para ver el calendario.</p>';
                 return;
             }
 
@@ -493,18 +531,18 @@
             const totalDays = new Date(year, month + 1, 0).getDate();
 
             let html = `
-                <div class="border border-gray-200 rounded-xl p-4 bg-white shadow-xs">
-                    <h3 class="font-bold text-gray-900 text-center mb-3 text-base">${monthNames[month]} ${year}</h3>
-                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                <div class="border border-slate-200/80 rounded-2xl p-5 bg-white shadow-xs">
+                    <h3 class="font-bold text-slate-900 text-center mb-4 text-sm tracking-wide uppercase">${monthNames[month]} ${year}</h3>
+                    <div class="grid grid-cols-7 gap-1.5 text-center mb-2">
             `;
 
             daysNames.forEach(d => {
-                html += `<span class="text-xs font-semibold text-gray-500">${d}</span>`;
+                html += `<span class="text-[11px] font-semibold text-slate-400">${d}</span>`;
             });
-            html += `</div><div class="grid grid-cols-7 gap-1">`;
+            html += `</div><div class="grid grid-cols-7 gap-1.5">`;
 
             for (let i = 0; i < startingDay; i++) {
-                html += `<div class="h-10 bg-gray-50 rounded opacity-30"></div>`;
+                html += `<div class="h-10 bg-slate-50/50 rounded-xl opacity-20"></div>`;
             }
 
             const propReservations = reservations[propId] || [];
@@ -520,37 +558,37 @@
 
                 if (checkoutRes && checkinRes && checkoutRes !== checkinRes) {
                     html += `
-                        <div class="h-10 rounded split-day split-day-reserved-checkout border border-gray-300 relative text-[9px] font-bold">
+                        <div class="h-10 rounded-xl split-day split-day-reserved-checkout border border-slate-200 relative text-[9px] font-bold shadow-xs">
                             <span onclick='openReservationDetails(${JSON.stringify(checkoutRes)})' title="Checkout: ${checkoutRes.nombre}" class="split-triangle-left text-rose-700 cursor-pointer hover:underline">${day}▼</span>
                             <span onclick='openReservationDetails(${JSON.stringify(checkinRes)})' title="Checkin: ${checkinRes.nombre}" class="split-triangle-right text-emerald-800 cursor-pointer hover:underline">▲</span>
                         </div>
                     `;
                 } else if (checkoutRes) {
                     html += `
-                        <div onclick='openReservationDetails(${JSON.stringify(checkoutRes)})' title="Checkout (Salida): ${checkoutRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                        <div onclick='openReservationDetails(${JSON.stringify(checkoutRes)})' title="Checkout: ${checkoutRes.nombre}" class="h-10 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-rose-100 transition text-xs font-bold shadow-xs">
                             <span>${day}</span>
-                            <span class="text-[9px] uppercase tracking-tighter text-rose-600">Salida</span>
+                            <span class="text-[8px] uppercase tracking-tighter font-semibold text-rose-500">Salida</span>
                         </div>
                     `;
                 } else if (checkinRes) {
                     html += `
-                        <div onclick='openReservationDetails(${JSON.stringify(checkinRes)})' title="Checkin (Ingreso): ${checkinRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                        <div onclick='openReservationDetails(${JSON.stringify(checkinRes)})' title="Checkin: ${checkinRes.nombre}" class="h-10 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-rose-100 transition text-xs font-bold shadow-xs">
                             <span>${day}</span>
-                            <span class="text-[9px] uppercase tracking-tighter text-rose-600">Ingreso</span>
+                            <span class="text-[8px] uppercase tracking-tighter font-semibold text-rose-500">Ingreso</span>
                         </div>
                     `;
                 } else if (fullReservedRes) {
                     html += `
-                        <div onclick='openReservationDetails(${JSON.stringify(fullReservedRes)})' title="Reservado: ${fullReservedRes.nombre}" class="h-10 bg-rose-100 border border-rose-300 text-rose-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-rose-200 transition text-xs font-bold">
+                        <div onclick='openReservationDetails(${JSON.stringify(fullReservedRes)})' title="Reservado: ${fullReservedRes.nombre}" class="h-10 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-rose-100 transition text-xs font-bold shadow-xs">
                             <span>${day}</span>
-                            <span class="text-[9px] uppercase tracking-tighter text-rose-600">Ocup.</span>
+                            <span class="text-[8px] uppercase tracking-tighter font-semibold text-rose-500">Ocup.</span>
                         </div>
                     `;
                 } else {
                     html += `
-                        <div title="Disponible" class="h-10 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100 transition text-xs">
+                        <div title="Disponible" class="h-10 bg-emerald-50/50 border border-emerald-100 text-emerald-800 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-100/70 transition text-xs shadow-xs">
                             <span class="font-semibold">${day}</span>
-                            <span class="text-[9px] text-emerald-600">Libre</span>
+                            <span class="text-[8px] text-emerald-600 font-medium">Libre</span>
                         </div>
                     `;
                 }
@@ -568,33 +606,33 @@
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             if (!activeProp) {
-                container.innerHTML = `<p class="text-gray-500 text-sm py-6 text-center">Selecciona una propiedad.</p>`;
+                container.innerHTML = `<p class="text-slate-400 text-sm py-12 text-center">Selecciona una propiedad.</p>`;
                 return;
             }
             const propReservations = reservations[activeProp.id] || [];
 
             if (propReservations.length === 0) {
-                container.innerHTML = `<p class="text-gray-500 text-sm py-6 text-center">No hay reservas registradas para ${activeProp.name}.</p>`;
+                container.innerHTML = `<p class="text-slate-400 text-sm py-12 text-center">No hay reservas registradas para ${activeProp.name}.</p>`;
                 return;
             }
 
             let html = `
-                <div class="mb-4 text-sm text-gray-600">Listado de reservas para: <strong class="text-gray-900">${activeProp.name}</strong></div>
-                <table class="w-full text-left border-collapse text-sm">
+                <div class="mb-4 text-xs font-medium text-slate-500">Mostrando reservas para: <strong class="text-slate-800">${activeProp.name}</strong></div>
+                <table class="w-full text-left border-collapse text-xs">
                     <thead>
-                        <tr class="bg-gray-100 text-gray-700 border-b border-gray-200">
-                            <th class="p-3">Pasajero</th>
-                            <th class="p-3">Check-in</th>
-                            <th class="p-3">Check-out</th>
-                            <th class="p-3">Días</th>
-                            <th class="p-3">Valor Diario ($)</th>
-                            <th class="p-3">Total ($)</th>
-                            <th class="p-3">Seña ($)</th>
-                            <th class="p-3 font-bold text-blue-800">Saldo Restante ($)</th>
-                            <th class="p-3 text-center">Acciones</th>
+                        <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                            <th class="p-3.5 font-semibold">Pasajero</th>
+                            <th class="p-3.5 font-semibold">Check-in</th>
+                            <th class="p-3.5 font-semibold">Check-out</th>
+                            <th class="p-3.5 font-semibold">Días</th>
+                            <th class="p-3.5 font-semibold">Valor Diario ($)</th>
+                            <th class="p-3.5 font-semibold">Total ($)</th>
+                            <th class="p-3.5 font-semibold">Seña ($)</th>
+                            <th class="p-3.5 font-semibold text-brand-700">Saldo Restante ($)</th>
+                            <th class="p-3.5 font-semibold text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="divide-y divide-slate-100">
             `;
 
             propReservations.forEach((r, index) => {
@@ -611,46 +649,46 @@
                 let saldoRestante = Math.max(0, montoTotal - montoReserva);
 
                 html += `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                        <td class="p-3 font-semibold text-gray-900">${r.nombre || 'Sin Nombre'}</td>
-                        <td class="p-3 text-gray-600">
-                            <div class="flex items-center gap-1">
-                                <span>${r.checkin}</span>
+                    <tr class="hover:bg-slate-50/75 transition">
+                        <td class="p-3.5 font-bold text-slate-900">${r.nombre || 'Sin Nombre'}</td>
+                        <td class="p-3.5 text-slate-600">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-medium">${r.checkin}</span>
                                 <div class="flex flex-col">
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', 1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Sumar un día">▲</button>
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', -1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Restar un día">▼</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Sumar un día">▲</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Restar un día">▼</button>
                                 </div>
                             </div>
                         </td>
-                        <td class="p-3 text-gray-600">
-                            <div class="flex items-center gap-1">
-                                <span>${r.checkout}</span>
+                        <td class="p-3.5 text-slate-600">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-medium">${r.checkout}</span>
                                 <div class="flex flex-col">
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', 1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Sumar un día">▲</button>
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', -1)" class="text-gray-500 hover:text-brand-600 text-xs leading-none p-0.5" title="Restar un día">▼</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Sumar un día">▲</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Restar un día">▼</button>
                                 </div>
                             </div>
                         </td>
-                        <td class="p-3 text-gray-600 font-medium" id="dias-${activeProp.id}-${index}">${r.dias} días</td>
-                        <td class="p-3">
+                        <td class="p-3.5 text-slate-600 font-medium" id="dias-${activeProp.id}-${index}">${r.dias} días</td>
+                        <td class="p-3.5">
                             <input type="number" value="${montoDiario || ''}" placeholder="Ej: 50000" 
                                 onchange="updateMontos('${activeProp.id}', ${index}, 'montoDiario', this.value)" 
-                                class="border border-gray-300 rounded px-2 py-1 w-24 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-24 text-xs focus:ring-2 focus:ring-brand-600 focus:outline-none bg-slate-50/50">
                         </td>
-                        <td class="p-3 font-bold text-brand-700" id="total-${activeProp.id}-${index}">
+                        <td class="p-3.5 font-bold text-slate-900" id="total-${activeProp.id}-${index}">
                             $ ${Number(montoTotal).toLocaleString('es-AR')}
                         </td>
-                        <td class="p-3">
+                        <td class="p-3.5">
                             <input type="number" value="${montoReserva || ''}" placeholder="Ej: 20000" 
                                 onchange="updateMontos('${activeProp.id}', ${index}, 'montoReserva', this.value)" 
-                                class="border border-gray-300 rounded px-2 py-1 w-24 text-sm focus:ring-2 focus:ring-brand-600 focus:outline-none">
+                                class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-24 text-xs focus:ring-2 focus:ring-brand-600 focus:outline-none bg-slate-50/50">
                         </td>
-                        <td class="p-3 font-bold text-blue-700 bg-blue-50/50" id="saldo-${activeProp.id}-${index}">
+                        <td class="p-3.5 font-bold text-indigo-700 bg-indigo-50/40 rounded-lg" id="saldo-${activeProp.id}-${index}">
                             $ ${Number(saldoRestante).toLocaleString('es-AR')}
                         </td>
-                        <td class="p-3 flex items-center justify-center gap-2">
-                            <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1 bg-brand-600 text-white rounded text-xs font-medium hover:bg-brand-700">Ver Contrato</button>
-                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}')" class="px-2.5 py-1 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 transition" title="Borrar y archivar reserva">Borrar</button>
+                        <td class="p-3.5 flex items-center justify-center gap-2">
+                            <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[11px] font-semibold transition shadow-xs">Contrato</button>
+                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold transition" title="Borrar y archivar">Borrar</button>
                         </td>
                     </tr>
                 `;
@@ -700,89 +738,11 @@
                     renderCalendars();
                     
                     const statusEl = document.getElementById('sync-status');
-                    statusEl.textContent = "Reserva eliminada y archivada";
-                    statusEl.className = "text-xs px-2 py-1 bg-emerald-100 text-emerald-800 rounded";
+                    statusEl.textContent = "Reserva archivada";
+                    statusEl.className = "text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium";
                 } catch (error) {
                     console.error("Error al borrar reserva:", error);
                     alert("Ocurrió un error al intentar eliminar la reserva.");
-                }
-            }
-        }
-
-        async function openHistoryModal() {
-            const modal = document.getElementById('history-modal');
-            const content = document.getElementById('history-content');
-            modal.classList.remove('hidden');
-            content.innerHTML = `<p class="text-center text-gray-500 py-4">Consultando hoja History en Google Sheets...</p>`;
-
-            try {
-                const response = await fetch(`${SCRIPT_URL}?action=getHistory`, { method: 'GET', redirect: 'follow' });
-                const data = await response.json();
-                const historyList = data.history || [];
-
-                if (historyList.length === 0) {
-                    content.innerHTML = `<p class="text-center text-gray-500 py-6">No hay reservas archivadas en el historial.</p>`;
-                    return;
-                }
-
-                let html = `
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-gray-100 text-gray-700 border-b">
-                                    <th class="p-3">Pasajero</th>
-                                    <th class="p-3">DNI / Doc</th>
-                                    <th class="p-3">Check-in</th>
-                                    <th class="p-3">Check-out</th>
-                                    <th class="p-3">Propiedad ID</th>
-                                    <th class="p-3 text-center">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-
-                historyList.forEach(item => {
-                    html += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="p-3 font-semibold text-gray-900">${item.nombre || 'Sin Nombre'}</td>
-                            <td class="p-3 text-gray-600">${item.documento || '-'}</td>
-                            <td class="p-3 text-gray-600">${item.checkin || '-'}</td>
-                            <td class="p-3 text-gray-600">${item.checkout || '-'}</td>
-                            <td class="p-3 text-gray-600">${item.propertyId || '-'}</td>
-                            <td class="p-3 text-center">
-                                <button onclick="restoreReservation(${item.rowIndex}, '${item.nombre || 'esta reserva'}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition">Revivir / Restaurar</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                html += `</tbody></table></div>`;
-                content.innerHTML = html;
-            } catch (err) {
-                console.error("Error al obtener historial:", err);
-                content.innerHTML = `<p class="text-center text-rose-600 py-4">Error al consultar el historial desde la nube.</p>`;
-            }
-        }
-
-        function closeHistoryModal() {
-            document.getElementById('history-modal').classList.add('hidden');
-        }
-
-        async function restoreReservation(rowIndex, clientName) {
-            if (confirm(`¿Deseas revivir y restaurar la reserva de ${clientName}? Volverá a las reservas activas.`)) {
-                try {
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'restoreReservation', rowIndex: rowIndex })
-                    });
-                    alert("Reserva restaurada con éxito. Se actualizará la vista al cerrar.");
-                    closeHistoryModal();
-                    await loadDataFromCloud();
-                } catch (err) {
-                    console.error("Error al restaurar reserva:", err);
-                    alert("Ocurrió un error al intentar restaurar la reserva.");
                 }
             }
         }
@@ -821,20 +781,26 @@
             const container = document.getElementById('properties-list-container');
             container.innerHTML = '';
             if (properties.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm py-4 col-span-2 text-center">No hay propiedades registradas.</p>';
+                container.innerHTML = '<p class="text-slate-400 text-sm py-8 col-span-2 text-center">No hay propiedades registradas.</p>';
                 return;
             }
             properties.forEach(p => {
                 container.innerHTML += `
-                    <div class="border border-gray-200 rounded-xl p-4 flex flex-col justify-between gap-3 bg-gray-50">
+                    <div class="border border-slate-200/80 rounded-2xl p-5 flex flex-col justify-between gap-4 bg-white shadow-xs">
                         <div>
-                            <h4 class="font-bold text-gray-900 text-base">${p.name} <span class="text-xs text-gray-400 font-normal">(ID: ${p.id})</span></h4>
-                            <p class="text-sm text-gray-600 mt-1"><strong>Dirección:</strong> ${p.address}</p>
-                            <p class="text-xs text-gray-500 mt-1">Capacidad: ${p.capacity ? p.capacity + ' pasajeros' : 'No especificada'}</p>
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-bold text-slate-900 text-sm">${p.name}</h4>
+                                <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-medium">ID: ${p.id}</span>
+                            </div>
+                            <p class="text-xs text-slate-600 mt-2 flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                                ${p.address}
+                            </p>
+                            <p class="text-xs text-slate-400 mt-1">Capacidad: ${p.capacity ? p.capacity + ' pasajeros' : 'No especificada'}</p>
                         </div>
-                        <div class="flex justify-end gap-2 pt-2 border-t border-gray-200">
-                            <button onclick="editProperty('${p.id}')" class="px-3 py-1 bg-white border border-gray-300 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-100">Editar</button>
-                            <button onclick="deleteProperty('${p.id}')" class="px-3 py-1 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100">Eliminar</button>
+                        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                            <button onclick="editProperty('${p.id}')" class="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">Editar</button>
+                            <button onclick="deleteProperty('${p.id}')" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 rounded-xl text-xs font-semibold transition">Eliminar</button>
                         </div>
                     </div>
                 `;
@@ -925,7 +891,7 @@
             const saldoRestante = (montoTotal - montoReserva) > 0 ? (montoTotal - montoReserva).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : "......";
 
             content.innerHTML = `
-                <p class="font-bold text-center text-base mb-4">CONTRATO DE LOCACIÓN POR TEMPORADA</p>
+                <p class="font-bold text-center text-sm mb-6 uppercase tracking-wider">CONTRATO DE LOCACIÓN POR TEMPORADA</p>
                 <p><strong>PRIMERA:</strong> La Sra. <strong>MELINA NOEL ELICABE</strong> de nacionalidad ARGENTINA, quien acredita su identidad con <strong>26.067.879</strong>, domiciliado en la calle <strong>MARTINEZ ZUVIRIA 1727</strong>, de la localidad de <strong>MAR DEL PLATA</strong>, provincia de <strong>BUENOS AIRES</strong>, en adelante denominada <strong>LA PARTE LOCADORA</strong>, da en alquiler al Sr/a: <strong>${data.nombre || '[NOMBRE Y APELLIDO]'}</strong>, de nacionalidad <strong>${data.pais || '[PAIS]'}</strong>, DNI N° <strong>${data.documento || '[DOCUMENTO]'}</strong>, con domicilio en: <strong>${data.domicilio || '[CALLE Y ALTURA]'}</strong>, de <strong>${data.localidad || '[LOCALIDAD]'}</strong> (CP: <strong>${data.cp || '[CP]'}</strong>), provincia de <strong>${data.provincia || '[PROVINCIA]'}</strong>, en adelante denominado <strong>LA PARTE LOCATARIA</strong>, y esta toma en alquiler el inmueble situado en <strong>${propertyAddress}</strong>, en adelante denominado <strong>INMUEBLE LOCADO</strong>. -</p>
                 <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines turísticos de LA PARTE LOCATARIA y su grupo conviviente. Están prohibidas cualesquiera sublocaciones y/o transmisiones.</p>
                 <p><strong>TERCERA:</strong> El alquiler por todo el plazo de este contrato, será de pesos $ <strong>${totalMontoFormatted}</strong> (Calculado a razón de $ ${montoDiario.toLocaleString('es-AR')} por día), pagándose una seña/reserva de $ <strong>${reservaFormatted}</strong> y el saldo restante al ingresar.</p>
