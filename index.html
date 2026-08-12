@@ -71,18 +71,22 @@
                     <p class="text-xs text-slate-500">Panel de administración temporaria</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end flex-wrap">
+            <!-- Botones de navegación adaptados con mejor ajuste responsivo -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
                 <span id="sync-status" class="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-medium">Sincronizando...</span>
                 <span id="device-indicator" class="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-full font-medium">Detectando...</span>
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Panel / Calendario
+                    Panel
                 </button>
-                <button onclick="switchTab('properties')" id="btn-properties" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5">
+                <button onclick="switchTab('properties')" id="btn-properties" class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5">
                     <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     Propiedades
                 </button>
-                <button onclick="openHistoryModal()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition">Ver Historial / Revivir</button>
+                <button onclick="openHistoryModal()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs sm:text-sm font-medium transition shadow-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Historial
+                </button>
             </div>
         </div>
     </header>
@@ -265,7 +269,7 @@
         </div>
     </div>
 
-    <!-- Script completo con lógica intacta -->
+    <!-- Script completo con lógica corregida y funcional para Historial -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -435,14 +439,14 @@
             if (tab === 'dashboard') {
                 dash.classList.remove('hidden');
                 props.classList.add('hidden');
-                btnDash.className = "px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5";
-                btnProps.className = "px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5";
+                btnDash.className = "px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5";
+                btnProps.className = "px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5";
                 loadDataFromCloud();
             } else {
                 dash.classList.add('hidden');
                 props.classList.remove('hidden');
-                btnProps.className = "px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5";
-                btnDash.className = "px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-sm font-medium transition flex items-center gap-1.5";
+                btnProps.className = "px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs sm:text-sm font-medium transition shadow-sm shadow-brand-600/20 flex items-center gap-1.5";
+                btnDash.className = "px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5";
                 renderPropertiesAdmin();
             }
         }
@@ -791,6 +795,86 @@
                 if (diasCell) diasCell.textContent = `${r.dias} días`;
 
                 await postDataToCloud({ action: 'saveReservations', reservations: reservations });
+            }
+        }
+
+        /* Funciones agregadas para el funcionamiento del Historial / Revivir */
+        async function openHistoryModal() {
+            const modal = document.getElementById('history-modal');
+            const content = document.getElementById('history-content');
+            modal.classList.remove('hidden');
+            content.innerHTML = '<p class="text-center text-gray-500 py-4">Cargando historial desde Google Sheets...</p>';
+
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getHistory`, { 
+                    method: 'GET', 
+                    redirect: 'follow' 
+                });
+                const data = await response.json();
+                const historyList = data.history || [];
+
+                if (historyList.length === 0) {
+                    content.innerHTML = '<p class="text-center text-gray-500 py-6">No hay reservas archivadas en el historial.</p>';
+                    return;
+                }
+
+                let html = `
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b border-gray-200 text-xs text-gray-600">
+                                <th class="p-2.5">Propiedad ID</th>
+                                <th class="p-2.5">Pasajero</th>
+                                <th class="p-2.5">Check-in</th>
+                                <th class="p-2.5">Check-out</th>
+                                <th class="p-2.5 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-xs">
+                `;
+
+                historyList.forEach((item, idx) => {
+                    html += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-2.5 font-medium">${item.PropertyID || item.propertyId || '-'}</td>
+                            <td class="p-2.5 font-bold text-gray-900">${item.Nombre || item.nombre || 'Sin Nombre'}</td>
+                            <td class="p-2.5">${item.CheckIn || item.checkin || '-'}</td>
+                            <td class="p-2.5">${item.CheckOut || item.checkout || '-'}</td>
+                            <td class="p-2.5 text-center">
+                                <button onclick="reviveReservation(${idx})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition shadow-xs">Revivir</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `</tbody></table>`;
+                content.innerHTML = html;
+            } catch (error) {
+                console.error("Error al obtener historial:", error);
+                content.innerHTML = '<p class="text-center text-rose-500 py-4">Error al cargar el historial. Verifique la conexión con el script.</p>';
+            }
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('history-modal').classList.add('hidden');
+        }
+
+        async function reviveReservation(historyIndex) {
+            if (confirm("¿Estás seguro de revivir esta reserva y devolverla a la planilla activa?")) {
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'reviveReservation', historyIndex: historyIndex })
+                    });
+
+                    alert("Reserva restaurada con éxito.");
+                    closeHistoryModal();
+                    await loadDataFromCloud();
+                } catch (error) {
+                    console.error("Error al revivir reserva:", error);
+                    alert("Ocurrió un error al intentar revivir la reserva.");
+                }
             }
         }
 
