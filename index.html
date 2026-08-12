@@ -59,7 +59,7 @@
         /* Estilos dinámicos para Fondo en Móvil / Logo en Escritorio corregidos */
         @media (max-width: 767px) {
             body {
-                background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('1000257943.jpg')[cite: 14] !important;
+                background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('1000257943.jpg') !important;
                 background-size: cover !important;
                 background-position: center !important;
                 background-repeat: no-repeat !important;
@@ -86,7 +86,7 @@
             <div class="flex items-center gap-3">
                 <!-- Versión Escritorio: Solo Logo (Imagen proporcionada) -->
                 <div class="hidden sm:flex desktop-logo-container w-11 h-11 rounded-xl overflow-hidden shadow-md border border-slate-200 bg-white items-center justify-center">
-                    <img src="1000257943.jpg" alt="Logo Estar Cerca Del Mar" class="w-full h-full object-cover"[cite: 14]>
+                    <img src="1000257943.jpg" alt="Logo Estar Cerca Del Mar" class="w-full h-full object-cover">
                 </div>
                 <!-- Versión Móvil: Icono SVG por defecto -->
                 <div class="flex sm:hidden w-10 h-10 rounded-xl bg-brand-600 items-center justify-center text-white shadow-md shadow-brand-600/30">
@@ -521,7 +521,7 @@
             renderList();
         }
 
-function openGoogleForm(event) {
+        function openGoogleForm(event) {
             event.preventDefault();
             if (!activePropertyId) {
                 alert("Por favor, selecciona una propiedad activa primero.");
