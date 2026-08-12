@@ -154,10 +154,16 @@
                         <p class="text-xs text-indigo-700 mt-0.5">Comparte el enlace con el pasajero para autogestionar la carga de sus datos y DNI.</p>
                     </div>
                 </div>
-                <a href="#" target="_blank" id="form-link" onclick="openGoogleForm(event)" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition shadow-sm shadow-indigo-600/20 whitespace-nowrap flex items-center gap-1.5">
-                    Abrir Formulario
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                </a>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <a href="#" target="_blank" id="form-link" onclick="openGoogleForm(event)" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition shadow-sm shadow-indigo-600/20 whitespace-nowrap flex items-center gap-1.5">
+                        Abrir Formulario
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                    <button onclick="copyFormLink(event)" class="px-4 py-2.5 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition shadow-sm whitespace-nowrap flex items-center gap-1.5">
+                        Copiar link formulario
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                    </button>
+                </div>
             </div>
             
             <!-- Vista de Calendario -->
@@ -521,11 +527,9 @@
             renderList();
         }
 
-        function openGoogleForm(event) {
-            event.preventDefault();
+        function getFormUrl() {
             if (!activePropertyId) {
-                alert("Por favor, selecciona una propiedad activa primero.");
-                return;
+                return null;
             }
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             const propName = activeProp ? activeProp.name : activePropertyId;
@@ -536,8 +540,32 @@
             // Envía por ejemplo "1 - Nombre de la Propiedad" o solo el ID según prefieras
             const propertyValue = encodeURIComponent(activePropertyId + " - " + propName);
             
-            const formUrl = `${BASE_FORM_URL}?usp=pp_url&${entryId}=${propertyValue}`;
+            return `${BASE_FORM_URL}?usp=pp_url&${entryId}=${propertyValue}`;
+        }
+
+        function openGoogleForm(event) {
+            event.preventDefault();
+            const formUrl = getFormUrl();
+            if (!formUrl) {
+                alert("Por favor, selecciona una propiedad activa primero.");
+                return;
+            }
             window.open(formUrl, '_blank');
+        }
+
+        function copyFormLink(event) {
+            event.preventDefault();
+            const formUrl = getFormUrl();
+            if (!formUrl) {
+                alert("Por favor, selecciona una propiedad activa primero.");
+                return;
+            }
+            navigator.clipboard.writeText(formUrl).then(() => {
+                alert("¡Enlace del formulario copiado al portapapeles para enviar por WhatsApp!");
+            }).catch(err => {
+                console.error("Error al copiar al portapapeles: ", err);
+                alert("No se pudo copiar el enlace automáticamente.");
+            });
         }
 
         function changeMonth(direction) {
