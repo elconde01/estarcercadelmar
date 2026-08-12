@@ -521,7 +521,7 @@
             renderList();
         }
 
-        function openGoogleForm(event) {
+function openGoogleForm(event) {
             event.preventDefault();
             if (!activePropertyId) {
                 alert("Por favor, selecciona una propiedad activa primero.");
@@ -529,7 +529,14 @@
             }
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             const propName = activeProp ? activeProp.name : activePropertyId;
-            const formUrl = `${BASE_FORM_URL}?usp=pp_url&entry.123456789=${encodeURIComponent(activePropertyId + " - " + propName)}`;
+            
+            // IMPORTANTE: Reemplaza "entry.123456789" por el entry ID real del campo "IDPropiedad" en tu Google Form
+            const entryId = "entry.416164251"; 
+            
+            // Envía por ejemplo "1 - Nombre de la Propiedad" o solo el ID según prefieras
+            const propertyValue = encodeURIComponent(activePropertyId + " - " + propName);
+            
+            const formUrl = `${BASE_FORM_URL}?usp=pp_url&${entryId}=${propertyValue}`;
             window.open(formUrl, '_blank');
         }
 
