@@ -56,14 +56,16 @@
             line-height: 1;
         }
         
-/* Estilos dinámicos para Fondo en Móvil / Logo en Escritorio */
+        /* Estilos dinámicos para Fondo en Móvil / Logo en Escritorio corregidos */
         @media (max-width: 767px) {
             body {
-                background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('https://github.com/elconde01/estarcercadelmar/blob/main/1000257943.jpg')[cite: 14];
-                background-size: cover;
-                background-position: center;
-                background-attachment: scroll; /* Cambiado de fixed a scroll para móviles */
-                min-height: 100vh; /* Asegura que cubra toda la altura de la pantalla */
+                background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('1000257943.jpg')[cite: 14] !important;
+                background-size: cover !important;
+                background-position: center !important;
+                background-repeat: no-repeat !important;
+                background-attachment: scroll !important;
+                min-height: 100vh !important;
+                background-color: #0f172a !important;
             }
             .desktop-logo-container {
                 display: none !important;
