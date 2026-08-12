@@ -55,6 +55,24 @@
             font-size: 9px;
             line-height: 1;
         }
+        
+        /* Estilos dinámicos para Fondo en Móvil / Logo en Escritorio */
+        @media (max-width: 767px) {
+            body {
+                background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)), url('1000257943.jpg')[cite: 14];
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }
+            .desktop-logo-container {
+                display: none !important;
+            }
+        }
+        @media (min-width: 768px) {
+            .mobile-bg-container {
+                background: transparent !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased" onload="initApp()">
@@ -63,7 +81,12 @@
     <header class="bg-white/80 backdrop-blur-md shadow-xs border-b border-slate-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-600/30">
+                <!-- Versión Escritorio: Solo Logo (Imagen proporcionada) -->
+                <div class="hidden sm:flex desktop-logo-container w-11 h-11 rounded-xl overflow-hidden shadow-md border border-slate-200 bg-white items-center justify-center">
+                    <img src="1000257943.jpg" alt="Logo Estar Cerca Del Mar" class="w-full h-full object-cover"[cite: 14]>
+                </div>
+                <!-- Versión Móvil: Icono SVG por defecto -->
+                <div class="flex sm:hidden w-10 h-10 rounded-xl bg-brand-600 items-center justify-center text-white shadow-md shadow-brand-600/30">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
                 <div>
@@ -99,7 +122,7 @@
         <div id="section-dashboard" class="space-y-6">
             
             <!-- Barra de Selección de Propiedad Activa -->
-            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-5 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3.5 w-full sm:w-auto">
                     <div class="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -118,7 +141,7 @@
             </div>
 
             <!-- Alerta de Enlace a Google Forms -->
-            <div class="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
+            <div class="bg-gradient-to-r from-indigo-50/90 to-blue-50/90 backdrop-blur-sm border border-indigo-100 p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
                 <div class="flex items-start gap-3.5">
                     <div class="p-2.5 bg-indigo-600 text-white rounded-xl mt-0.5 shadow-sm shadow-indigo-600/30">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -135,7 +158,7 @@
             </div>
             
             <!-- Vista de Calendario -->
-            <section id="view-grid" class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6">
+            <section id="view-grid" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Grilla de Ocupación</h2>
@@ -167,7 +190,7 @@
             </section>
 
             <!-- Vista de Lista por Fechas y Disponibilidad -->
-            <section id="view-list" class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6 hidden">
+            <section id="view-list" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-6 hidden">
                 <div class="flex justify-between items-center mb-6">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Listado Cronológico y Saldos</h2>
@@ -182,7 +205,7 @@
 
         <!-- ================= VISTA 2: ADMIN DE PROPIEDADES ================= -->
         <div id="section-properties" class="space-y-6 hidden">
-            <div class="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6">
+            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div>
                         <h2 class="text-base font-bold text-slate-900">Administración de Propiedades</h2>
@@ -799,7 +822,6 @@
             }
         }
 
-        /* Funciones agregadas para el funcionamiento del Historial / Revivir */
         async function openHistoryModal() {
             const modal = document.getElementById('history-modal');
             const content = document.getElementById('history-content');
