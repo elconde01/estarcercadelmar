@@ -918,9 +918,7 @@
 
 // Función encargada de solicitar la restauración de una reserva desde el historial
 function reviveReservation(historyIndex) {
-    // CORRECCIÓN: Se envía la acción 'restoreReservation' (coincidente con el backend) 
-    // y se ajusta el índice sumando 2 (1 por el encabezado de la hoja y 1 porque los arrays inician en 0)
-    const adjustedRowIndex = historyIndex + 2;
+    const adjustedRowIndex = historyIndex + 1;
 
     Swal.fire({
         title: '¿Estás seguro?',
