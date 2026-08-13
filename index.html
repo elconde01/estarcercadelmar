@@ -803,7 +803,7 @@
             }
         }
 
-        async function deleteAndArchiveReservation(propId, index, clientName) {
+        async function deleteReservation(propId, index, clientName) {
             if (confirm(`¿Estás seguro de eliminar la reserva de ${clientName}? Será removida de la planilla y trasladada a la hoja "History".`)) {
                 try {
                     await fetch(SCRIPT_URL, {
@@ -916,7 +916,7 @@
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-        async function restoreReservationFromHistory(historyIndex) {
+        async function reviveReservation(historyIndex) {
             if (confirm("¿Estás seguro de revivir esta reserva y devolverla a la planilla activa?")) {
                 try {
                     // CORRECCIÓN CLAVE: Removido 'mode: 'no-cors'' para permitir lectura de respuesta y evitar cierre prematuro sin persistencia
