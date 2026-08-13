@@ -916,26 +916,58 @@
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-async function reviveReservation(historyIndex) {
-            if (confirm("¿Estás seguro de revivir esta reserva y devolverla a la planilla activa?")) {
-                try {
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'reviveReservation', historyIndex: historyIndex })
-                    });
+// Función encargada de solicitar la restauración de una reserva desde el historial
+function reviveReservation(historyIndex) {
+    // CORRECCIÓN: Se envía la acción 'restoreReservation' (coincidente con el backend) 
+    // y se ajusta el índice sumando 2 (1 por el encabezado de la hoja y 1 porque los arrays inician en 0)
+    const adjustedRowIndex = historyIndex + 2;
 
-                    alert("Reserva restaurada con éxito.");
-                    closeHistoryModal();
-                    await loadDataFromCloud();
-                } catch (error) {
-                    console.error("Error al revivir reserva:", error);
-                    alert("Ocurrió un error al intentar revivir la reserva.");
-                }
-            }
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "La reserva volverá al listado activo de reservas.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, restaurar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar indicador de carga
+            Swal.showLoading();
+
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors', // O tu configuración actual de llamadas
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    action: 'restoreReservation', // CORREGIDO: coincide con el backend
+                    rowIndex: adjustedRowIndex      // Se envía la fila real calculada
+                })
+            })
+            .then(response => {
+                Swal.fire(
+                    '¡Restaurada!',
+                    'La reserva ha sido movida a la pestaña de Reservas.',
+                    'success'
+                );
+                // Recargar los datos de la interfaz
+                if (typeof loadHistory === 'function') loadHistory();
+                if (typeof loadReservations === 'function') loadReservations();
+            })
+            .catch(error => {
+                console.error('Error al restaurar la reserva:', error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al intentar restaurar la reserva.',
+                    'error'
+                );
+            });
         }
-
+    });
+}
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
             container.innerHTML = '';
