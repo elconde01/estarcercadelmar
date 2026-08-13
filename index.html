@@ -810,7 +810,7 @@
                         method: 'POST',
                         mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'deleteAndArchiveReservation', targetPropId: propId, targetIndex: index })
+                        body: JSON.stringify({ action: 'deleteReservation', propertyId: propId, reservationIndex: index })
                     });
 
                     reservations[propId].splice(index, 1);
@@ -826,7 +826,7 @@
                 }
             }
         }
-
+        
         async function updateMontos(propId, index, field, value) {
             const numericValue = parseFloat(value) || 0;
             
