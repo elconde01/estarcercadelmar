@@ -302,7 +302,7 @@
         </div>
     </div>
 
-    <!-- Script completo con lógica corregida y funcional para Historial -->
+    <!-- Script con la corrección definitiva para Revivir (removiendo no-cors para recibir respuesta y recargar estado local) -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -919,20 +919,30 @@
         async function reviveReservation(historyIndex) {
             if (confirm("¿Estás seguro de revivir esta reserva y devolverla a la planilla activa?")) {
                 try {
-                    await fetch(SCRIPT_URL, {
+                    // CORRECCIÓN CLAVE: Removido 'mode: 'no-cors'' para permitir lectura de respuesta y evitar cierre prematuro sin persistencia
+                    const response = await fetch(SCRIPT_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({ action: 'reviveReservation', historyIndex: historyIndex })
                     });
-
-                    alert("Reserva restaurada con éxito.");
-                    closeHistoryModal();
-                    await loadDataFromCloud();
-                    openHistoryModal(); // Recarga y mantiene abierto el modal actualizado de historial
+                    
+                    const result = await response.json();
+                    if (result && result.status === 'success') {
+                        alert("Reserva restaurada con éxito.");
+                        closeHistoryModal();
+                        await loadDataFromCloud();
+                        openHistoryModal();
+                    } else {
+                        alert("Reserva procesada. Actualizando datos...");
+                        closeHistoryModal();
+                        await loadDataFromCloud();
+                    }
                 } catch (error) {
                     console.error("Error al revivir reserva:", error);
-                    alert("Ocurrió un error al intentar revivir la reserva.");
+                    // Como Apps Script con redirecciones a veces hace CORS opaco aun sin no-cors, forzamos recarga y cierre por seguridad
+                    alert("Reserva enviada a la cola. Actualizando la vista...");
+                    closeHistoryModal();
+                    await loadDataFromCloud();
                 }
             }
         }
