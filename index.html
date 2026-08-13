@@ -302,7 +302,7 @@
         </div>
     </div>
 
-    <!-- Script con la corrección definitiva para Revivir (removiendo no-cors para recibir respuesta y recargar estado local) -->
+    <!-- Script Principal -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyyxgE0gxTfeLRvD9nYFAGZ1wmI_OP6YkkY-aNRV79a_Q_zAwyrnyShvysgOZzo3ih4/exec";
         const BASE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScAddjLekqnZUKj8xGKyyud5atmdzp9cQ606UZWZomum4lhoQ/viewform";
@@ -890,15 +890,15 @@
                         <tbody class="divide-y divide-gray-100 text-xs">
                 `;
 
-                historyList.forEach((item, idx) => {
+                historyList.forEach((item) => {
                     html += `
                         <tr class="hover:bg-gray-50">
-                            <td class="p-2.5 font-medium">${item.PropertyID || item.propertyId || '-'}</td>
-                            <td class="p-2.5 font-bold text-gray-900">${item.Nombre || item.nombre || 'Sin Nombre'}</td>
-                            <td class="p-2.5">${item.CheckIn || item.checkin || '-'}</td>
-                            <td class="p-2.5">${item.CheckOut || item.checkout || '-'}</td>
+                            <td class="p-2.5 font-medium">${item.propertyId || '-'}</td>
+                            <td class="p-2.5 font-bold text-gray-900">${item.nombre || 'Sin Nombre'}</td>
+                            <td class="p-2.5">${item.checkin || '-'}</td>
+                            <td class="p-2.5">${item.checkout || '-'}</td>
                             <td class="p-2.5 text-center">
-                                <button onclick="reviveReservation(${idx})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition shadow-xs">Revivir</button>
+                                <button onclick="reviveReservation(${item.rowIndex})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition shadow-xs">Revivir</button>
                             </td>
                         </tr>
                     `;
@@ -916,56 +916,37 @@
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-// Función encargada de solicitar la restauración de una reserva desde el historial
-function reviveReservation(historyIndex) {
-    const adjustedRowIndex = historyIndex + 1;
-
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "La reserva volverá al listado activo de reservas.",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, restaurar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Mostrar indicador de carga
-            Swal.showLoading();
-
-            fetch(scriptUrl, {
-                method: 'POST',
-                //mode: 'no-cors', // O tu configuración actual de llamadas
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    action: 'restoreReservation', // CORREGIDO: coincide con el backend
-                    rowIndex: adjustedRowIndex      // Se envía la fila real calculada
-                })
-            })
-            .then(response => {
-                Swal.fire(
-                    '¡Restaurada!',
-                    'La reserva ha sido movida a la pestaña de Reservas.',
-                    'success'
-                );
-                // Recargar los datos de la interfaz
-                if (typeof loadHistory === 'function') loadHistory();
-                if (typeof loadReservations === 'function') loadReservations();
-            })
-            .catch(error => {
-                console.error('Error al restaurar la reserva:', error);
-                Swal.fire(
-                    'Error',
-                    'Hubo un problema al intentar restaurar la reserva.',
-                    'error'
-                );
-            });
+        // Función corregida para revivir una reserva enviando la solicitud correctamente
+        async function reviveReservation(rowIndex) {
+            if (confirm("¿Estás seguro de restaurar esta reserva al listado activo?")) {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
+                        body: JSON.stringify({ 
+                            action: 'restoreReservation', 
+                            rowIndex: rowIndex 
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        alert("¡Reserva restaurada correctamente!");
+                        closeHistoryModal();
+                        await loadDataFromCloud();
+                    } else {
+                        alert("Error al restaurar: " + (result.message || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error("Error al revivir la reserva:", error);
+                    alert("Ocurrió un error al intentar restaurar la reserva.");
+                }
+            }
         }
-    });
-}
+
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
             container.innerHTML = '';
