@@ -916,33 +916,22 @@
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-        async function reviveReservation(historyIndex) {
+async function reviveReservation(historyIndex) {
             if (confirm("¿Estás seguro de revivir esta reserva y devolverla a la planilla activa?")) {
                 try {
-                    // CORRECCIÓN CLAVE: Removido 'mode: 'no-cors'' para permitir lectura de respuesta y evitar cierre prematuro sin persistencia
-                    const response = await fetch(SCRIPT_URL, {
+                    await fetch(SCRIPT_URL, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ action: 'restoreReservationFromHistory', rowIndex: historyIndex })
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'reviveReservation', historyIndex: historyIndex })
                     });
-                    
-                    const result = await response.json();
-                    if (result && result.status === 'success') {
-                        alert("Reserva restaurada con éxito.");
-                        closeHistoryModal();
-                        await loadDataFromCloud();
-                        openHistoryModal();
-                    } else {
-                        alert("Reserva procesada. Actualizando datos...");
-                        closeHistoryModal();
-                        await loadDataFromCloud();
-                    }
-                } catch (error) {
-                    console.error("Error al revivir reserva:", error);
-                    // Como Apps Script con redirecciones a veces hace CORS opaco aun sin no-cors, forzamos recarga y cierre por seguridad
-                    alert("Reserva enviada a la cola. Actualizando la vista...");
+
+                    alert("Reserva restaurada con éxito.");
                     closeHistoryModal();
                     await loadDataFromCloud();
+                } catch (error) {
+                    console.error("Error al revivir reserva:", error);
+                    alert("Ocurrió un error al intentar revivir la reserva.");
                 }
             }
         }
