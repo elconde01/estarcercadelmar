@@ -810,7 +810,7 @@
                         method: 'POST',
                         mode: 'no-cors',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'deleteAndArchiveReservation', propertyId: propId, reservationIndex: index })
+                        body: JSON.stringify({ action: 'deleteAndArchiveReservation', targetPropId: propId, targetIndex: index })
                     });
 
                     reservations[propId].splice(index, 1);
@@ -923,7 +923,7 @@
                     const response = await fetch(SCRIPT_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify({ action: 'restoreReservationFromHistory', historyIndex: historyIndex })
+                        body: JSON.stringify({ action: 'restoreReservationFromHistory', rowIndex: historyIndex })
                     });
                     
                     const result = await response.json();
