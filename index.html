@@ -884,7 +884,7 @@
                                 <th class="p-2.5">Pasajero</th>
                                 <th class="p-2.5">Check-in</th>
                                 <th class="p-2.5">Check-out</th>
-                                <th class="p-2.5 text-center">Acción</th>
+                                <th class="p-2.5 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 text-xs">
@@ -897,8 +897,9 @@
                             <td class="p-2.5 font-bold text-gray-900">${item.nombre || 'Sin Nombre'}</td>
                             <td class="p-2.5">${item.checkin || '-'}</td>
                             <td class="p-2.5">${item.checkout || '-'}</td>
-                            <td class="p-2.5 text-center">
+                            <td class="p-2.5 text-center flex items-center justify-center gap-2">
                                 <button onclick="reviveReservation(${item.rowIndex})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition shadow-xs">Revivir</button>
+                                <button onclick="deleteHistoryRow(${item.rowIndex})" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition shadow-xs">Borrar</button>
                             </td>
                         </tr>
                     `;
@@ -916,7 +917,6 @@
             document.getElementById('history-modal').classList.add('hidden');
         }
 
-        // Función corregida para revivir una reserva enviando la solicitud correctamente
         async function reviveReservation(rowIndex) {
             if (confirm("¿Estás seguro de restaurar esta reserva al listado activo?")) {
                 try {
@@ -943,6 +943,35 @@
                 } catch (error) {
                     console.error("Error al revivir la reserva:", error);
                     alert("Ocurrió un error al intentar restaurar la reserva.");
+                }
+            }
+        }
+
+        async function deleteHistoryRow(rowIndex) {
+            if (confirm("¿Estás seguro de borrar esta fila permanentemente del historial? Esta acción no se puede deshacer.")) {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
+                        body: JSON.stringify({ 
+                            action: 'deleteHistoryRow', 
+                            rowIndex: rowIndex 
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        alert("¡Fila eliminada permanentemente del historial!");
+                        openHistoryModal(); // Recargar la tabla del historial
+                    } else {
+                        alert("Error al borrar: " + (result.message || 'Error desconocido'));
+                    }
+                } catch (error) {
+                    console.error("Error al borrar la fila del historial:", error);
+                    alert("Ocurrió un error al intentar borrar la fila.");
                 }
             }
         }
