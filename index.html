@@ -816,7 +816,7 @@ function renderList() {
                 try {
                     await fetch(SCRIPT_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
+                        mode: 'cors',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: 'deleteReservation', propertyId: propId, reservationIndex: index })
                     });
