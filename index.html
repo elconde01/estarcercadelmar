@@ -994,7 +994,7 @@
         try {
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // O 'cors' dependiendo de tu configuración de despliegue
+                mode: 'cors', // O 'cors' dependiendo de tu configuración de despliegue
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'askAI', query: query })
             });
