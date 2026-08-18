@@ -690,7 +690,7 @@
             generateContract(res);
         }
 
-        function renderList() {
+function renderList() {
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             if (!activeProp) {
@@ -710,6 +710,7 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 border-b border-slate-200">
                             <th class="p-3.5 font-semibold">Pasajero</th>
+                            <th class="p-3.5 font-semibold">Pasajeros</th>
                             <th class="p-3.5 font-semibold">Check-in</th>
                             <th class="p-3.5 font-semibold">Check-out</th>
                             <th class="p-3.5 font-semibold">Días</th>
@@ -724,6 +725,10 @@
             `;
 
             propReservations.forEach((r, index) => {
+                // Si tienes la cantidad de pasajeros guardada en el objeto r, úsala aquí.
+                // Si no, puedes mostrar un input o el dato si viene de tu sheet.
+                let cantPasajeros = r.pasajeros || 1; 
+
                 if (r.checkin && r.checkout) {
                     let diff = new Date(r.checkout + 'T00:00:00') - new Date(r.checkin + 'T00:00:00');
                     let calcDays = Math.max(0, Math.round(diff / (1000 * 60 * 60 * 24)));
@@ -740,11 +745,16 @@
                     <tr class="hover:bg-slate-50/75 transition">
                         <td class="p-3.5 font-bold text-slate-900">${r.nombre || 'Sin Nombre'}</td>
                         <td class="p-3.5 text-slate-600">
+                            <input type="number" value="${cantPasajeros}" min="1" 
+                                onchange="updatePasajeros('${activeProp.id}', ${index}, this.value)" 
+                                class="border border-slate-200 rounded-lg px-2 py-1 w-16 text-xs bg-slate-50/50">
+                        </td>
+                        <td class="p-3.5 text-slate-600">
                             <div class="flex items-center gap-1.5">
                                 <span class="font-medium">${r.checkin}</span>
                                 <div class="flex flex-col">
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Sumar un día">▲</button>
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Restar un día">▼</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5">▲</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkin', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5">▼</button>
                                 </div>
                             </div>
                         </td>
@@ -752,31 +762,27 @@
                             <div class="flex items-center gap-1.5">
                                 <span class="font-medium">${r.checkout}</span>
                                 <div class="flex flex-col">
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Sumar un día">▲</button>
-                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5" title="Restar un día">▼</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5">▲</button>
+                                    <button onclick="adjustDate('${activeProp.id}', ${index}, 'checkout', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] leading-none p-0.5">▼</button>
                                 </div>
                             </div>
                         </td>
                         <td class="p-3.5 text-slate-600 font-medium" id="dias-${activeProp.id}-${index}">${r.dias} días</td>
                         <td class="p-3.5">
-                            <input type="number" value="${montoDiario || ''}" placeholder="Ej: 50000" 
-                                onchange="updateMontos('${activeProp.id}', ${index}, 'montoDiario', this.value)" 
-                                class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-24 text-xs focus:ring-2 focus:ring-brand-600 focus:outline-none bg-slate-50/50">
+                            <input type="number" value="${montoDiario || ''}" onchange="updateMontos('${activeProp.id}', ${index}, 'montoDiario', this.value)" class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-24 text-xs bg-slate-50/50">
                         </td>
                         <td class="p-3.5 font-bold text-slate-900" id="total-${activeProp.id}-${index}">
                             $ ${Number(montoTotal).toLocaleString('es-AR')}
                         </td>
                         <td class="p-3.5">
-                            <input type="number" value="${montoReserva || ''}" placeholder="Ej: 20000" 
-                                onchange="updateMontos('${activeProp.id}', ${index}, 'montoReserva', this.value)" 
-                                class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-24 text-xs focus:ring-2 focus:ring-brand-600 focus:outline-none bg-slate-50/50">
+                            <input type="number" value="${montoReserva || ''}" onchange="updateMontos('${activeProp.id}', ${index}, 'montoReserva', this.value)" class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-24 text-xs bg-slate-50/50">
                         </td>
                         <td class="p-3.5 font-bold text-indigo-700 bg-indigo-50/40 rounded-lg" id="saldo-${activeProp.id}-${index}">
                             $ ${Number(saldoRestante).toLocaleString('es-AR')}
                         </td>
                         <td class="p-3.5 flex items-center justify-center gap-2">
-                            <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[11px] font-semibold transition shadow-xs">Contrato</button>
-                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold transition" title="Borrar y archivar">Borrar</button>
+                            <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[11px] font-semibold transition">Contrato</button>
+                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold transition">Borrar</button>
                         </td>
                     </tr>
                 `;
