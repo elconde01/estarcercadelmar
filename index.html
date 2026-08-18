@@ -725,9 +725,7 @@ function renderList() {
             `;
 
             propReservations.forEach((r, index) => {
-                // Si tienes la cantidad de pasajeros guardada en el objeto r, úsala aquí.
-                // Si no, puedes mostrar un input o el dato si viene de tu sheet.
-                let cantPasajeros = r.pasajeros || 1; 
+                let cantPasajeros = r.pasajeros || '-'; 
 
                 if (r.checkin && r.checkout) {
                     let diff = new Date(r.checkout + 'T00:00:00') - new Date(r.checkin + 'T00:00:00');
@@ -744,11 +742,7 @@ function renderList() {
                 html += `
                     <tr class="hover:bg-slate-50/75 transition">
                         <td class="p-3.5 font-bold text-slate-900">${r.nombre || 'Sin Nombre'}</td>
-                        <td class="p-3.5 text-slate-600">
-                            <input type="number" value="${cantPasajeros}" min="1" 
-                                onchange="updatePasajeros('${activeProp.id}', ${index}, this.value)" 
-                                class="border border-slate-200 rounded-lg px-2 py-1 w-16 text-xs bg-slate-50/50">
-                        </td>
+                        <td class="p-3.5 text-slate-600 font-medium">${cantPasajeros}</td>
                         <td class="p-3.5 text-slate-600">
                             <div class="flex items-center gap-1.5">
                                 <span class="font-medium">${r.checkin}</span>
@@ -791,7 +785,7 @@ function renderList() {
             html += `</tbody></table>`;
             container.innerHTML = html;
         }
-
+        
         async function adjustDate(propId, index, field, daysDelta) {
             if (reservations[propId] && reservations[propId][index]) {
                 let r = reservations[propId][index];
