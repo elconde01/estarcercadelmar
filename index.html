@@ -811,29 +811,48 @@ function renderList() {
             }
         }
 
-        async function deleteReservation(propId, index, clientName) {
-            if (confirm(`¿Estás seguro de eliminar la reserva de ${clientName}? Será removida de la planilla y trasladada a la hoja "History".`)) {
-                try {
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'deleteReservation', propertyId: propId, reservationIndex: index })
-                    });
+async function deleteReservation(propId, index, clientName) {
+    if (confirm(`¿Estás seguro de eliminar la reserva de ${clientName}? Será removida de la planilla y trasladada a la hoja "History".`)) {
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                redirect: 'follow',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify({ 
+                    action: 'deleteReservation', 
+                    propertyId: propId, 
+                    reservationIndex: index 
+                })
+            });
 
-                    reservations[propId].splice(index, 1);
-                    renderList();
-                    renderCalendars();
-                    
-                    const statusEl = document.getElementById('sync-status');
-                    statusEl.textContent = "Reserva archivada";
-                    statusEl.className = "text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium";
-                } catch (error) {
-                    console.error("Error al borrar reserva:", error);
-                    alert("Ocurrió un error al intentar eliminar la reserva.");
-                }
+            const textResponse = await response.text();
+            let result;
+            try {
+                result = JSON.parse(textResponse);
+            } catch (e) {
+                result = { status: 'success' }; // Fallback si Apps Script devuelve texto plano
             }
+
+            if (result.status === 'success' || !result.status) {
+                reservations[propId].splice(index, 1);
+                renderList();
+                renderCalendars();
+                
+                const statusEl = document.getElementById('sync-status');
+                statusEl.textContent = "Reserva archivada";
+                statusEl.className = "text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium";
+            } else {
+                alert("Error al archivar la reserva: " + (result.message || 'Error desconocido'));
+                await loadDataFromCloud(); // Recargar datos reales en caso de fallo
+            }
+        } catch (error) {
+            console.error("Error al borrar reserva:", error);
+            alert("Ocurrió un error de red al intentar eliminar la reserva.");
         }
+    }
+}
         
         async function updateMontos(propId, index, field, value) {
             const numericValue = parseFloat(value) || 0;
