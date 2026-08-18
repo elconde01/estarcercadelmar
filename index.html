@@ -984,27 +984,35 @@
             }
         }
 
-        async function sendToAI() {
-        const query = document.getElementById('ai-query').value;
-        const responseEl = document.getElementById('ai-response');
-        if (!query) return;
-    
-        responseEl.textContent = "Consultando a la IA...";
+async function sendToAI() {
+    const query = document.getElementById('ai-query').value;
+    const responseEl = document.getElementById('ai-response');
+    if (!query) return;
+
+    responseEl.textContent = "Consultando a la IA...";
+
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            // Usamos 'cors' para ser explícitos
+            mode: 'cors', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'askAI', query: query })
+        });
+
+        // --- VERIFICACIÓN AQUÍ ---
+        const textResponse = await response.text(); 
+        console.log("Respuesta cruda del servidor:", textResponse);
         
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'cors', // O 'cors' dependiendo de tu configuración de despliegue
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'askAI', query: query })
-            });
-            
-            const result = await response.json();
-            responseEl.textContent = result.answer;
-        } catch (error) {
-            responseEl.textContent = "Error al conectar con la IA.";
-        }
+        const result = JSON.parse(textResponse);
+        // -------------------------
+
+        responseEl.textContent = result.answer;
+    } catch (error) {
+        console.error("Detalle del error:", error);
+        responseEl.textContent = "Error al conectar. Revisa la consola (F12).";
     }
+}
 
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
