@@ -994,23 +994,18 @@ async function sendToAI() {
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            // Usamos 'cors' para ser explícitos
-            mode: 'cors', 
-            headers: { 'Content-Type': 'application/json' },
+            // CAMBIO CLAVE AQUÍ: Usar 'text/plain' evita el preflight CORS bloqueante
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: 'askAI', query: query })
         });
 
-        // --- VERIFICACIÓN AQUÍ ---
-        const textResponse = await response.text(); 
-        console.log("Respuesta cruda del servidor:", textResponse);
-        
+        const textResponse = await response.text();
         const result = JSON.parse(textResponse);
-        // -------------------------
-
+        
         responseEl.textContent = result.answer;
     } catch (error) {
         console.error("Detalle del error:", error);
-        responseEl.textContent = "Error al conectar. Revisa la consola (F12).";
+        responseEl.textContent = "Error al conectar con la IA.";
     }
 }
 
