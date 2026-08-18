@@ -690,7 +690,7 @@
             generateContract(res);
         }
 
-function renderList() {
+        function renderList() {
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             if (!activeProp) {
@@ -776,7 +776,7 @@ function renderList() {
                         </td>
                         <td class="p-3.5 flex items-center justify-center gap-2">
                             <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[11px] font-semibold transition">Contrato</button>
-                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold transition">Borrar</button>
+                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}', '${r.checkin}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold transition">Borrar</button>
                         </td>
                     </tr>
                 `;
@@ -811,48 +811,50 @@ function renderList() {
             }
         }
 
-async function deleteReservation(propId, index, clientName) {
-    if (confirm(`¿Estás seguro de eliminar la reserva de ${clientName}? Será removida de la planilla y trasladada a la hoja "History".`)) {
-        try {
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                redirect: 'follow',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
-                },
-                body: JSON.stringify({ 
-                    action: 'deleteReservation', 
-                    propertyId: propId, 
-                    reservationIndex: index 
-                })
-            });
+        async function deleteReservation(propId, index, clientName, checkinDate) {
+            if (confirm(`¿Estás seguro de eliminar la reserva de ${clientName}? Será removida de la planilla y trasladada a la hoja "History".`)) {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        redirect: 'follow',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
+                        body: JSON.stringify({ 
+                            action: 'deleteReservation', 
+                            propertyId: propId, 
+                            reservationIndex: index,
+                            clientName: clientName,
+                            checkin: checkinDate
+                        })
+                    });
 
-            const textResponse = await response.text();
-            let result;
-            try {
-                result = JSON.parse(textResponse);
-            } catch (e) {
-                result = { status: 'success' }; // Fallback si Apps Script devuelve texto plano
-            }
+                    const textResponse = await response.text();
+                    let result;
+                    try {
+                        result = JSON.parse(textResponse);
+                    } catch (e) {
+                        result = { status: 'success' };
+                    }
 
-            if (result.status === 'success' || !result.status) {
-                reservations[propId].splice(index, 1);
-                renderList();
-                renderCalendars();
-                
-                const statusEl = document.getElementById('sync-status');
-                statusEl.textContent = "Reserva archivada";
-                statusEl.className = "text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium";
-            } else {
-                alert("Error al archivar la reserva: " + (result.message || 'Error desconocido'));
-                await loadDataFromCloud(); // Recargar datos reales en caso de fallo
+                    if (result.status === 'success' || !result.status) {
+                        reservations[propId].splice(index, 1);
+                        renderList();
+                        renderCalendars();
+                        
+                        const statusEl = document.getElementById('sync-status');
+                        statusEl.textContent = "Reserva archivada";
+                        statusEl.className = "text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-medium";
+                    } else {
+                        alert("Error al archivar la reserva: " + (result.message || 'Error desconocido'));
+                        await loadDataFromCloud();
+                    }
+                } catch (error) {
+                    console.error("Error al borrar reserva:", error);
+                    alert("Ocurrió un error de red al intentar eliminar la reserva.");
+                }
             }
-        } catch (error) {
-            console.error("Error al borrar reserva:", error);
-            alert("Ocurrió un error de red al intentar eliminar la reserva.");
         }
-    }
-}
         
         async function updateMontos(propId, index, field, value) {
             const numericValue = parseFloat(value) || 0;
@@ -992,7 +994,7 @@ async function deleteReservation(propId, index, clientName) {
                     const result = await response.json();
                     if (result.status === 'success') {
                         alert("¡Fila eliminada permanentemente del historial!");
-                        openHistoryModal(); // Recargar la tabla del historial
+                        openHistoryModal();
                     } else {
                         alert("Error al borrar: " + (result.message || 'Error desconocido'));
                     }
@@ -1003,30 +1005,29 @@ async function deleteReservation(propId, index, clientName) {
             }
         }
 
-async function sendToAI() {
-    const query = document.getElementById('ai-query').value;
-    const responseEl = document.getElementById('ai-response');
-    if (!query) return;
+        async function sendToAI() {
+            const query = document.getElementById('ai-query').value;
+            const responseEl = document.getElementById('ai-response');
+            if (!query) return;
 
-    responseEl.textContent = "Consultando a la IA...";
+            responseEl.textContent = "Consultando a la IA...";
 
-    try {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            // CAMBIO CLAVE AQUÍ: Usar 'text/plain' evita el preflight CORS bloqueante
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: 'askAI', query: query })
-        });
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'askAI', query: query })
+                });
 
-        const textResponse = await response.text();
-        const result = JSON.parse(textResponse);
-        
-        responseEl.textContent = result.answer;
-    } catch (error) {
-        console.error("Detalle del error:", error);
-        responseEl.textContent = "Error al conectar con la IA.";
-    }
-}
+                const textResponse = await response.text();
+                const result = JSON.parse(textResponse);
+                
+                responseEl.textContent = result.answer;
+            } catch (error) {
+                console.error("Detalle del error:", error);
+                responseEl.textContent = "Error al conectar con la IA.";
+            }
+        }
 
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
