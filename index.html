@@ -776,7 +776,7 @@
                         </td>
                         <td class="p-3.5 flex items-center justify-center gap-2">
                             <button onclick='generateContract(${JSON.stringify(r)})' class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[11px] font-semibold transition">Contrato</button>
-                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}', '${r.checkin}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold transition">Borrar</button>
+                            <button onclick="deleteReservation('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[11px] font-semibold transition">Borrar</button>
                         </td>
                     </tr>
                 `;
@@ -811,7 +811,7 @@
             }
         }
 
-        async function deleteReservation(propId, index, clientName, checkinDate) {
+        async function deleteReservation(propId, index, clientName) {
             if (confirm(`¿Estás seguro de eliminar la reserva de ${clientName}? Será removida de la planilla y trasladada a la hoja "History".`)) {
                 try {
                     const response = await fetch(SCRIPT_URL, {
@@ -823,9 +823,7 @@
                         body: JSON.stringify({ 
                             action: 'deleteReservation', 
                             propertyId: propId, 
-                            reservationIndex: index,
-                            clientName: clientName,
-                            checkin: checkinDate
+                            reservationIndex: index 
                         })
                     });
 
