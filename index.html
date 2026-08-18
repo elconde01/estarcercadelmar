@@ -984,6 +984,28 @@
             }
         }
 
+        async function sendToAI() {
+        const query = document.getElementById('ai-query').value;
+        const responseEl = document.getElementById('ai-response');
+        if (!query) return;
+    
+        responseEl.textContent = "Consultando a la IA...";
+        
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // O 'cors' dependiendo de tu configuración de despliegue
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'askAI', query: query })
+            });
+            
+            const result = await response.json();
+            responseEl.textContent = result.answer;
+        } catch (error) {
+            responseEl.textContent = "Error al conectar con la IA.";
+        }
+    }
+
         function renderPropertiesAdmin() {
             const container = document.getElementById('properties-list-container');
             container.innerHTML = '';
