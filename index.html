@@ -89,7 +89,7 @@
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
                 
                 <!-- Cotización BNA Venta -->
-                <div onclick="promptManualBnaRate()" title="Clic para actualizar o editar cotización BNA" class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs">
+                <div onclick="promptManualBnaRate()" title="Clic para actualizar o editar cotización BNA (Venta)" class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs">
                     <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>BNA Venta:</span>
                     <span id="bna-rate-display" class="font-extrabold">$ --</span>
@@ -149,7 +149,6 @@
                     </div>
                     <div>
                         <label for="active-property-select" class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Propiedad en vista</label>
-                        <!-- TIPOGRAFÍA REDUCIDA 30% PARA ESTILO MÁS ELEGANTE Y COMPACTO -->
                         <select id="active-property-select" onchange="changeActiveProperty()" class="mt-0.5 bg-transparent font-bold text-slate-800 text-xs sm:text-[13px] focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5 pr-4">
                             <!-- Opciones cargadas por JS -->
                         </select>
@@ -291,7 +290,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900">Listado de Reservas y Saldos</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Control de pagos, contratos y recálculo automático por BNA</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Control de pagos, contratos y recálculo automático por BNA (Venta)</p>
                     </div>
 
                     <div class="relative w-full sm:w-64">
@@ -544,7 +543,8 @@
         let currentCalendarDate = new Date();
         let globalCurrency = localStorage.getItem('app_currency') || 'ARS';
         
-        let bnasellRate = parseFloat(localStorage.getItem('bna_sell_rate')) || 1420;
+        // Cotización oficial de VENTA del BNA (con fallback seguro)
+        let bnaRate = parseFloat(localStorage.getItem('bna_rate')) || 1480;
 
         async function initApp() {
             lucide.createIcons();
@@ -553,16 +553,22 @@
             await loadDataFromCloud();
         }
 
+        /**
+         * Obtiene la cotización del Dólar Oficial VENTA (Banco Nación)
+         */
         async function fetchBnaRate() {
             try {
                 const res = await fetch('https://dolarapi.com/v1/dolares/oficial');
                 const data = await res.json();
                 if (data && data.venta) {
-                    bnasellRate = parseFloat(data.venta);
-                    localStorage.setItem('bna_sell_rate', bnaSellRate);
+                    bnaRate = parseFloat(data.venta);
+                    localStorage.setItem('bna_rate', bnaRate);
+                } else if (data && data.compra) {
+                    bnaRate = parseFloat(data.compra);
+                    localStorage.setItem('bna_rate', bnaRate);
                 }
             } catch (e) {
-                console.warn("No se pudo obtener cotización automática del BNA, usando valor en caché:", bnaSellRate);
+                console.warn("No se pudo obtener cotización automática de VENTA del BNA, usando valor en caché:", bnaRate);
             }
             updateBnaDisplay();
         }
@@ -570,19 +576,19 @@
         function updateBnaDisplay() {
             const el = document.getElementById('bna-rate-display');
             const elMob = document.getElementById('bna-rate-badge-mob');
-            if (el) el.textContent = `$ ${bnaSellRate.toLocaleString('es-AR')}`;
-            if (elMob) elMob.textContent = `BNA: $ ${bnaSellRate.toLocaleString('es-AR')}`;
+            if (el) el.textContent = `$ ${bnaRate.toLocaleString('es-AR')}`;
+            if (elMob) elMob.textContent = `BNA Vta: $ ${bnaRate.toLocaleString('es-AR')}`;
         }
 
         function promptManualBnaRate() {
-            const val = prompt("Cotización actual Dólar Oficial BNA (Venta):", bnaSellRate);
+            const val = prompt("Cotización actual Dólar Oficial BNA (Venta):", bnaRate);
             if (val && !isNaN(parseFloat(val)) && parseFloat(val) > 0) {
-                bnaSellRate = parseFloat(val);
-                localStorage.setItem('bna_sell_rate', bnaSellRate);
+                bnaRate = parseFloat(val);
+                localStorage.setItem('bna_rate', bnaRate);
                 updateBnaDisplay();
                 renderKPIs();
                 renderList();
-                alert(`¡Cotización actualizada a $ ${bnaSellRate}! Los valores se han recalculado.`);
+                alert(`¡Cotización actualizada a $ ${bnaRate}! Los valores se han recalculado.`);
             }
         }
 
@@ -612,6 +618,9 @@
             return (curr || globalCurrency) === 'USD' ? 'U$S' : '$';
         }
 
+        /**
+         * Convierte dinámicamente un monto entre monedas según la cotización BNA Venta
+         */
         function convertAmount(amount, originalCurrency, targetCurrency) {
             let val = Number(amount) || 0;
             const orig = (originalCurrency || 'ARS').toUpperCase();
@@ -620,9 +629,9 @@
             if (orig === target) return val;
 
             if (orig === 'USD' && target === 'ARS') {
-                return val * bnnSellRate;
+                return val * bnaRate; // Multiplica por valor Venta BNA
             } else if (orig === 'ARS' && target === 'USD') {
-                return bnaSellRate > 0 ? (val / bnaSellRate) : 0;
+                return bnaRate > 0 ? (val / bnaRate) : 0; // Divide por valor Venta BNA
             }
             return val;
         }
@@ -804,8 +813,8 @@
             const senaNote = document.getElementById('kpi-sena-note');
             const saldoNote = document.getElementById('kpi-saldo-note');
             if (globalCurrency === 'USD') {
-                senaNote.textContent = `A BNA venta ($${bnaSellRate})`;
-                saldoNote.textContent = `A BNA venta ($${bnaSellRate})`;
+                senaNote.textContent = `A BNA venta ($${bnaRate})`;
+                saldoNote.textContent = `A BNA venta ($${bnaRate})`;
             } else {
                 senaNote.textContent = `Recaudado a cuenta`;
                 saldoNote.textContent = `A cobrar en check-in`;
@@ -983,10 +992,8 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
                             <th class="p-3.5 min-w-[150px]">Huésped</th>
-                            <!-- COLUMNA FECHAS ENSANCHADA -->
                             <th class="p-3.5 min-w-[190px]">Fechas (In / Out)</th>
                             <th class="p-3.5 text-center min-w-[70px]">Noches</th>
-                            <!-- COLUMNAS DE MONTOS MÁS ANCHAS -->
                             <th class="p-3.5 min-w-[140px]">Tarifa / Noche</th>
                             <th class="p-3.5 min-w-[130px]">Total (${getCurrencySymbol(globalCurrency)})</th>
                             <th class="p-3.5 min-w-[140px]">Seña (${getCurrencySymbol(globalCurrency)})</th>
@@ -1022,7 +1029,6 @@
                             </div>
                         </td>
                         
-                        <!-- FECHAS EN UNA SOLA LÍNEA CLARA -->
                         <td class="p-3.5 text-slate-700 whitespace-nowrap">
                             <div class="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-1">
                                 <span>${r.checkin}</span>
@@ -1033,7 +1039,6 @@
 
                         <td class="p-3.5 text-center font-bold text-slate-700 whitespace-nowrap">${days} n</td>
                         
-                        <!-- TARIFA DIARIA CON INPUT MÁS ANCHO -->
                         <td class="p-3.5">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
@@ -1041,12 +1046,10 @@
                             </div>
                         </td>
 
-                        <!-- TOTAL RECALCULADO HOLGADO -->
                         <td class="p-3.5 font-extrabold text-slate-900 whitespace-nowrap text-sm">
                             ${formatMoney(convertedTotal, globalCurrency)}
                         </td>
 
-                        <!-- SEÑA CON INPUT MÁS ANCHO -->
                         <td class="p-3.5">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
@@ -1054,12 +1057,10 @@
                             </div>
                         </td>
 
-                        <!-- SALDO RESTANTE DESTACADO Y COMPLETO -->
                         <td class="p-3.5 font-extrabold text-amber-800 bg-amber-50/40 whitespace-nowrap text-sm">
                             ${formatMoney(convertedBalance, globalCurrency)}
                         </td>
 
-                        <!-- ACCIONES -->
                         <td class="p-3.5">
                             <div class="flex items-center justify-center gap-1.5">
                                 <button onclick='generateContract(${JSON.stringify(r)})' title="Ver Contrato" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-brand-200/60 shadow-2xs">
