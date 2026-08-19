@@ -6,7 +6,7 @@
     <title>Estar Cerca Del Mar — Gestión de Alquileres</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Plus Jakarta Sans -->
+    <!-- Google Fonts: Plus Jakarta Sans & Playfair Display -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
@@ -30,12 +30,6 @@
                             700: '#075985',
                             800: '#0c4a6e',
                             900: '#082f49'
-                        },
-                        sand: {
-                            50: '#fdfbf7',
-                            100: '#f7f2ea',
-                            200: '#eee3d3',
-                            500: '#b89c72'
                         }
                     }
                 }
@@ -56,7 +50,7 @@
         }
         @media (max-width: 767px) {
             body {
-                background-image: linear-gradient(to bottom, rgba(8, 47, 73, 0.88), rgba(15, 23, 42, 0.94)), url('1000257943.jpg') !important;
+                background-image: linear-gradient(to bottom, rgba(8, 47, 73, 0.90), rgba(15, 23, 42, 0.95)), url('1000257943.jpg') !important;
                 background-size: cover !important;
                 background-position: center !important;
                 background-attachment: fixed !important;
@@ -68,64 +62,71 @@
 
     <!-- Header Principal -->
     <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
             
             <!-- Logo & Marca -->
-            <div class="flex items-center gap-3.5 w-full md:w-auto justify-between md:justify-start">
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
                 <div class="flex items-center gap-3">
-                    <div class="w-11 h-11 rounded-2xl overflow-hidden shadow-md border border-slate-200 bg-white flex items-center justify-center shrink-0">
+                    <div class="w-10 h-10 rounded-2xl overflow-hidden shadow-md border border-slate-200 bg-white flex items-center justify-center shrink-0">
                         <img src="1000257943.jpg" alt="Logo Estar Cerca Del Mar" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full bg-brand-700 text-white flex items-center justify-center font-bold text-lg\'>🌊</div>';">
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h1 class="text-base font-extrabold text-slate-900 tracking-tight leading-none">ESTAR CERCA DEL MAR</h1>
-                            <span class="px-2 py-0.5 text-[10px] font-bold bg-brand-50 text-brand-700 rounded-full border border-brand-200/60 uppercase">Alquileres</span>
+                            <h1 class="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-none">ESTAR CERCA DEL MAR</h1>
+                            <span class="px-2 py-0.5 text-[9px] font-bold bg-brand-50 text-brand-700 rounded-full border border-brand-200 uppercase">Alquileres</span>
                         </div>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">Panel de Control & Reservas Temporarias</p>
+                        <p class="text-[11px] text-slate-500 font-medium mt-0.5">Gestión de Alquileres Temporarios</p>
                     </div>
                 </div>
 
-                <!-- Estado de Sincronización en Móvil -->
-                <div class="flex md:hidden items-center gap-1.5">
-                    <span id="sync-status-mobile" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" title="Sincronizando..."></span>
+                <!-- Estado móvil -->
+                <div class="flex md:hidden items-center gap-2">
+                    <span id="bna-rate-badge-mob" class="text-[10px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">USD = $...</span>
                 </div>
             </div>
 
             <!-- Controles y Acciones Superiores -->
-            <div class="flex items-center gap-2.5 w-full md:w-auto justify-end flex-wrap">
+            <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
                 
-                <!-- Selector de Moneda -->
-                <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
-                    <button onclick="setCurrency('ARS')" id="curr-btn-ars" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs transition">ARS ($)</button>
-                    <button onclick="setCurrency('USD')" id="curr-btn-usd" class="px-2.5 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition">USD (U$S)</button>
+                <!-- Cotización BNA Compra -->
+                <div onclick="promptManualBnaRate()" title="Clic para actualizar o editar cotización BNA" class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs">
+                    <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>BNA Compra:</span>
+                    <span id="bna-rate-display" class="font-extrabold">$ --</span>
                 </div>
 
-                <!-- Estado de Sincronización Escritorio -->
-                <span id="sync-status" class="hidden md:inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl font-semibold shadow-2xs">
+                <!-- Selector de Moneda con Recálculo -->
+                <div class="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                    <button onclick="setCurrency('ARS')" id="curr-btn-ars" class="px-2.5 py-1 text-xs font-extrabold rounded-lg bg-white text-slate-900 shadow-xs transition">ARS ($)</button>
+                    <button onclick="setCurrency('USD')" id="curr-btn-usd" class="px-2.5 py-1 text-xs font-extrabold rounded-lg text-slate-500 hover:text-slate-900 transition">USD (U$S)</button>
+                </div>
+
+                <!-- Estado Sincronización -->
+                <span id="sync-status" class="hidden lg:inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl font-semibold shadow-2xs">
                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                     Sincronizando...
                 </span>
 
-                <!-- Botón Historial -->
-                <button onclick="openHistoryModal()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-2xs">
+                <!-- Historial -->
+                <button onclick="openHistoryModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-slate-200 shadow-2xs">
                     <i data-lucide="archive" class="w-3.5 h-3.5 text-slate-500"></i>
-                    Historial
+                    <span class="hidden sm:inline">Historial</span>
                 </button>
 
-                <!-- Botón Reservas Tab -->
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3.5 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <!-- Pestaña Reservas -->
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1">
                     <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                     Reservas
                 </button>
 
-                <!-- Botón Propiedades Tab -->
-                <button onclick="switchTab('properties')" id="btn-properties" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                <!-- Pestaña Propiedades -->
+                <button onclick="switchTab('properties')" id="btn-properties" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1">
                     <i data-lucide="home" class="w-3.5 h-3.5 text-slate-500"></i>
                     Propiedades
                 </button>
 
                 <!-- Botón Principal: Nueva Reserva -->
-                <button onclick="openNewReservationModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                <button onclick="openNewReservationModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1">
                     <i data-lucide="plus-circle" class="w-4 h-4"></i>
                     Nueva Reserva
                 </button>
@@ -142,26 +143,30 @@
             <!-- Barra Superior de Propiedad Activa & Vistas -->
             <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
                 
-                <div class="flex items-center gap-3.5">
-                    <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 border border-brand-200/60 flex items-center justify-center shrink-0">
-                        <i data-lucide="building-2" class="w-5 h-5"></i>
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-brand-50 text-brand-700 border border-brand-200/60 flex items-center justify-center shrink-0">
+                        <i data-lucide="building-2" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <label for="active-property-select" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Propiedad en vista</label>
-                        <select id="active-property-select" onchange="changeActiveProperty()" class="mt-0.5 bg-transparent font-extrabold text-slate-900 text-base focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5 pr-4">
-                            <!-- Inyectado por JS -->
+                        <label for="active-property-select" class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Propiedad en vista</label>
+                        <!-- TIPOGRAFÍA REDUCIDA 30% PARA ESTILO MÁS ELEGANTE Y COMPACTO -->
+                        <select id="active-property-select" onchange="changeActiveProperty()" class="mt-0.5 bg-transparent font-bold text-slate-800 text-xs sm:text-[13px] focus:outline-none cursor-pointer border-b border-dashed border-slate-300 pb-0.5 pr-4">
+                            <!-- Opciones cargadas por JS -->
                         </select>
                     </div>
                 </div>
 
-                <!-- Selector de Vista (Calendario / Lista) -->
-                <div class="flex items-center justify-between md:justify-end gap-2">
+                <!-- Selector de Vista & Aviso Moneda -->
+                <div class="flex items-center justify-between md:justify-end gap-2.5 flex-wrap">
+                    <div class="text-[11px] text-slate-500 font-semibold hidden lg:block">
+                        Mostrando valores en: <strong id="active-currency-label" class="text-brand-800">Pesos (ARS)</strong>
+                    </div>
                     <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
-                        <button onclick="toggleView('grid')" id="view-btn-grid" class="px-3.5 py-1.5 bg-brand-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5">
+                        <button onclick="toggleView('grid')" id="view-btn-grid" class="px-3 py-1.5 bg-brand-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5">
                             <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
                             Calendario
                         </button>
-                        <button onclick="toggleView('list')" id="view-btn-list" class="px-3.5 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                        <button onclick="toggleView('list')" id="view-btn-list" class="px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
                             <i data-lucide="list" class="w-3.5 h-3.5"></i>
                             Listado y Cobros
                         </button>
@@ -169,7 +174,7 @@
                 </div>
             </div>
 
-            <!-- Tarjetas de Métricas Resumen (KPIs) -->
+            <!-- Tarjetas Resumen (KPIs) -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
                 <div class="bg-white/95 rounded-2xl p-4 border border-slate-200/80 shadow-xs flex flex-col justify-between">
                     <div class="flex items-center justify-between text-slate-500 mb-2">
@@ -193,7 +198,7 @@
                     </div>
                     <div>
                         <span id="kpi-total-nights" class="text-2xl font-extrabold text-slate-900">0</span>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Total días computados</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Total noches ocupadas</p>
                     </div>
                 </div>
 
@@ -206,7 +211,7 @@
                     </div>
                     <div>
                         <span id="kpi-total-sena" class="text-2xl font-extrabold text-emerald-700">$ 0</span>
-                        <p class="text-[11px] text-emerald-600/80 mt-0.5">Cobrado a cuenta</p>
+                        <p class="text-[11px] text-emerald-600/80 mt-0.5" id="kpi-sena-note">Recaudado a cuenta</p>
                     </div>
                 </div>
 
@@ -219,13 +224,13 @@
                     </div>
                     <div>
                         <span id="kpi-total-saldo" class="text-2xl font-extrabold text-amber-700">$ 0</span>
-                        <p class="text-[11px] text-amber-600/80 mt-0.5">A cobrar en check-in</p>
+                        <p class="text-[11px] text-amber-600/80 mt-0.5" id="kpi-saldo-note">A cobrar en check-in</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Banner Interactivo: Autogestión de Pasajeros & WhatsApp -->
-            <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-sky-900 text-white rounded-2xl p-5 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <!-- Banner Google Forms & WhatsApp -->
+            <div class="bg-gradient-to-r from-brand-900 via-brand-800 to-sky-900 text-white rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div class="flex items-start gap-3.5">
                     <div class="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0 mt-0.5 border border-white/20">
                         <i data-lucide="send" class="w-5 h-5"></i>
@@ -233,7 +238,7 @@
                     <div>
                         <h3 class="font-bold text-sm text-white">Autogestión de Pasajeros por Google Forms</h3>
                         <p class="text-xs text-sky-200 mt-0.5 max-w-xl">
-                            Envía el enlace al pasajero con la propiedad preseleccionada para que cargue sus datos de DNI, teléfono y fechas directamente en la planilla.
+                            Envía el enlace al pasajero con la propiedad preseleccionada para que registre sus datos y DNI directamente en la planilla.
                         </p>
                     </div>
                 </div>
@@ -244,23 +249,20 @@
                     </button>
                     <button onclick="copyFormLink(event)" class="flex-1 sm:flex-initial px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
                         <i data-lucide="copy" class="w-4 h-4"></i>
-                        Copiar Enlace
+                        Copiar Link
                     </button>
                 </div>
             </div>
 
-            <!-- VISTA A: CALENDARIO DE OCUPACIÓN -->
+            <!-- VISTA A: CALENDARIO -->
             <section id="view-grid" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6 space-y-6">
-                
-                <!-- Encabezado de Calendario con Navegación -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900">Grilla Mensual de Ocupación</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Control visual de check-ins, check-outs y días disponibles</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Control visual de check-ins, check-outs y disponibilidad</p>
                     </div>
 
                     <div class="flex items-center gap-3 flex-wrap">
-                        <!-- Navegador de Meses -->
                         <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
                             <button onclick="changeMonth(-1)" class="px-3 py-1.5 hover:bg-white rounded-lg text-slate-700 text-xs font-bold transition shadow-2xs flex items-center gap-1">
                                 <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
@@ -273,7 +275,6 @@
                             </button>
                         </div>
 
-                        <!-- Referencias de Color -->
                         <div class="flex items-center gap-2.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl">
                             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block"></span> Libre</span>
                             <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 bg-rose-500 rounded-full inline-block"></span> Ocupado</span>
@@ -282,22 +283,17 @@
                     </div>
                 </div>
 
-                <!-- Grilla Doble Mes -->
-                <div id="calendar-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Meses inyectados dinámicamente -->
-                </div>
+                <div id="calendar-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </section>
 
             <!-- VISTA B: LISTADO CRONOLÓGICO Y CONTROL DE SALDOS -->
             <section id="view-list" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6 space-y-4 hidden">
-                
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900">Listado de Reservas y Saldos</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Control de pagos, contratos y edición en línea</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Control de pagos, contratos y recálculo automático por BNA</p>
                     </div>
 
-                    <!-- Buscador rápido -->
                     <div class="relative w-full sm:w-64">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
                         <input type="text" id="search-input" onkeyup="filterReservationsList()" placeholder="Buscar por huésped, DNI..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none font-medium">
@@ -316,7 +312,7 @@
                     <h3 class="font-bold text-sm text-white">Consultar al Asistente Inteligente</h3>
                 </div>
                 <div class="flex gap-2">
-                    <input type="text" id="ai-query" placeholder="Ej: ¿Qué ingresos tengo esta semana o cuánto saldo falta cobrar?" 
+                    <input type="text" id="ai-query" placeholder="Ej: ¿Qué ingresos tengo en la próxima semana?" 
                            class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:outline-none font-medium">
                     <button onclick="sendToAI()" class="bg-brand-600 hover:bg-brand-700 px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
                         <span>Preguntar</span>
@@ -335,7 +331,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h2 class="text-base font-extrabold text-slate-900">Mis Propiedades</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Departamentos sincronizados en la base de datos de Google Sheets</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Departamentos conectados a Google Sheets</p>
                     </div>
                     <button onclick="openPropertyModal()" class="px-4 py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
                         <i data-lucide="plus" class="w-4 h-4"></i>
@@ -343,18 +339,17 @@
                     </button>
                 </div>
 
-                <div id="properties-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Inyectado por JS -->
-                </div>
+                <div id="properties-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
 
     </main>
 
-    <!-- Footer Simple -->
+    <!-- Footer -->
     <footer class="bg-white/80 border-t border-slate-200/80 py-4 mt-auto">
-        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400 font-medium">
-            Estar Cerca Del Mar • Sistema de Gestión de Alquileres Temporarios • Mar del Plata
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400 font-medium flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>Estar Cerca Del Mar • Mar del Plata</span>
+            <span class="text-[11px] text-slate-400">Cotización de referencia: Dólar Oficial Banco Nación (Compra)</span>
         </div>
     </footer>
 
@@ -374,11 +369,19 @@
             </div>
 
             <form id="new-res-form" onsubmit="saveManualReservation(event)" class="space-y-4 overflow-y-auto pr-1">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Propiedad</label>
-                    <select id="modal-res-prop" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 font-semibold text-slate-800">
-                        <!-- Opciones de propiedades -->
-                    </select>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Propiedad</label>
+                        <select id="modal-res-prop" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 font-semibold text-slate-800">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Moneda Base</label>
+                        <select id="modal-res-currency" onchange="updateModalCurrencyLabels()" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 font-bold">
+                            <option value="ARS">ARS ($)</option>
+                            <option value="USD">USD (U$S)</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -419,16 +422,16 @@
 
                 <div class="grid grid-cols-3 gap-2.5">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Valor / Noche</label>
-                        <input type="number" id="modal-res-daily" value="0" oninput="calculateModalTotals()" class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 font-bold">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Valor / Noche (<span class="modal-curr-sym">$</span>)</label>
+                        <input type="number" id="modal-res-daily" value="0" step="any" oninput="calculateModalTotals()" class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 font-bold">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total</label>
-                        <input type="number" id="modal-res-total" value="0" readonly class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs bg-slate-100 font-extrabold text-slate-900">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total (<span class="modal-curr-sym">$</span>)</label>
+                        <input type="number" id="modal-res-total" value="0" step="any" readonly class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs bg-slate-100 font-extrabold text-slate-900">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Seña Abonada</label>
-                        <input type="number" id="modal-res-deposit" value="0" oninput="calculateModalTotals()" class="w-full border border-emerald-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-emerald-50/50 font-bold text-emerald-800">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Seña (<span class="modal-curr-sym">$</span>)</label>
+                        <input type="number" id="modal-res-deposit" value="0" step="any" oninput="calculateModalTotals()" class="w-full border border-emerald-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-emerald-50/50 font-bold text-emerald-800">
                     </div>
                 </div>
 
@@ -540,11 +543,47 @@
         let activePropertyId = null;
         let currentCalendarDate = new Date();
         let globalCurrency = localStorage.getItem('app_currency') || 'ARS';
+        
+        let bnaBuyRate = parseFloat(localStorage.getItem('bna_buy_rate')) || 1420;
 
         async function initApp() {
             lucide.createIcons();
             setCurrency(globalCurrency, false);
+            await fetchBnaRate();
             await loadDataFromCloud();
+        }
+
+        async function fetchBnaRate() {
+            try {
+                const res = await fetch('https://dolarapi.com/v1/dolares/oficial');
+                const data = await res.json();
+                if (data && data.compra) {
+                    bnaBuyRate = parseFloat(data.compra);
+                    localStorage.setItem('bna_buy_rate', bnaBuyRate);
+                }
+            } catch (e) {
+                console.warn("No se pudo obtener cotización automática del BNA, usando valor en caché:", bnaBuyRate);
+            }
+            updateBnaDisplay();
+        }
+
+        function updateBnaDisplay() {
+            const el = document.getElementById('bna-rate-display');
+            const elMob = document.getElementById('bna-rate-badge-mob');
+            if (el) el.textContent = `$ ${bnaBuyRate.toLocaleString('es-AR')}`;
+            if (elMob) elMob.textContent = `BNA: $ ${bnaBuyRate.toLocaleString('es-AR')}`;
+        }
+
+        function promptManualBnaRate() {
+            const val = prompt("Cotización actual Dólar Oficial BNA (Compra):", bnaBuyRate);
+            if (val && !isNaN(parseFloat(val)) && parseFloat(val) > 0) {
+                bnaBuyRate = parseFloat(val);
+                localStorage.setItem('bna_buy_rate', bnaBuyRate);
+                updateBnaDisplay();
+                renderKPIs();
+                renderList();
+                alert(`¡Cotización actualizada a $ ${bnaBuyRate}! Los valores se han recalculado.`);
+            }
         }
 
         function setCurrency(curr, shouldSave = true) {
@@ -553,12 +592,16 @@
 
             const btnArs = document.getElementById('curr-btn-ars');
             const btnUsd = document.getElementById('curr-btn-usd');
+            const lblCurr = document.getElementById('active-currency-label');
+
             if (curr === 'ARS') {
-                btnArs.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs transition";
-                btnUsd.className = "px-2.5 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition";
+                btnArs.className = "px-2.5 py-1 text-xs font-extrabold rounded-lg bg-white text-slate-900 shadow-xs transition";
+                btnUsd.className = "px-2.5 py-1 text-xs font-extrabold rounded-lg text-slate-500 hover:text-slate-900 transition";
+                if (lblCurr) lblCurr.textContent = "Pesos Argentinos (ARS)";
             } else {
-                btnUsd.className = "px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-xs transition";
-                btnArs.className = "px-2.5 py-1 text-xs font-bold rounded-lg text-slate-500 hover:text-slate-900 transition";
+                btnUsd.className = "px-2.5 py-1 text-xs font-extrabold rounded-lg bg-white text-slate-900 shadow-xs transition";
+                btnArs.className = "px-2.5 py-1 text-xs font-extrabold rounded-lg text-slate-500 hover:text-slate-900 transition";
+                if (lblCurr) lblCurr.textContent = "Dólares Estadounidenses (USD)";
             }
 
             renderKPIs();
@@ -569,10 +612,27 @@
             return (curr || globalCurrency) === 'USD' ? 'U$S' : '$';
         }
 
-        function formatMoney(amount, curr) {
+        function convertAmount(amount, originalCurrency, targetCurrency) {
+            let val = Number(amount) || 0;
+            const orig = (originalCurrency || 'ARS').toUpperCase();
+            const target = (targetCurrency || globalCurrency).toUpperCase();
+
+            if (orig === target) return val;
+
+            if (orig === 'USD' && target === 'ARS') {
+                return val * bnaBuyRate;
+            } else if (orig === 'ARS' && target === 'USD') {
+                return bnaBuyRate > 0 ? (val / bnaBuyRate) : 0;
+            }
+            return val;
+        }
+
+        function formatMoney(amount, targetCurr) {
+            const curr = targetCurr || globalCurrency;
             const sym = getCurrencySymbol(curr);
             const val = Number(amount) || 0;
-            return `${sym} ${val.toLocaleString('es-AR')}`;
+            const decimals = curr === 'USD' ? 2 : 0;
+            return `${sym} ${val.toLocaleString('es-AR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
         }
 
         async function loadDataFromCloud() {
@@ -609,13 +669,9 @@
 
         function updateSyncBadge(text, color) {
             const el = document.getElementById('sync-status');
-            const elMob = document.getElementById('sync-status-mobile');
             if (el) {
                 el.innerHTML = `<span class="w-2 h-2 rounded-full bg-${color}-500 ${color === 'amber' ? 'animate-pulse' : ''}"></span> ${text}`;
-                el.className = `hidden md:inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-${color}-50 text-${color}-700 border border-${color}-200 rounded-xl font-semibold shadow-2xs`;
-            }
-            if (elMob) {
-                elMob.className = `w-2.5 h-2.5 rounded-full bg-${color}-500 ${color === 'amber' ? 'animate-pulse' : ''}`;
+                el.className = `hidden lg:inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 bg-${color}-50 text-${color}-700 border border-${color}-200 rounded-xl font-semibold shadow-2xs`;
             }
         }
 
@@ -643,14 +699,14 @@
             if (tab === 'dashboard') {
                 dash.classList.remove('hidden');
                 props.classList.add('hidden');
-                btnDash.className = "px-3.5 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5";
-                btnProps.className = "px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5";
+                btnDash.className = "px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1";
+                btnProps.className = "px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1";
                 loadDataFromCloud();
             } else {
                 dash.classList.add('hidden');
                 props.classList.remove('hidden');
-                btnProps.className = "px-3.5 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5";
-                btnDash.className = "px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5";
+                btnProps.className = "px-3 py-1.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1";
+                btnDash.className = "px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1";
                 renderPropertiesAdmin();
             }
             lucide.createIcons();
@@ -665,14 +721,14 @@
             if (view === 'grid') {
                 grid.classList.remove('hidden');
                 list.classList.add('hidden');
-                btnGrid.className = "px-3.5 py-1.5 bg-brand-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5";
-                btnList.className = "px-3.5 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                btnGrid.className = "px-3 py-1.5 bg-brand-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5";
+                btnList.className = "px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
                 renderCalendars();
             } else {
                 grid.classList.add('hidden');
                 list.classList.remove('hidden');
-                btnList.className = "px-3.5 py-1.5 bg-brand-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5";
-                btnGrid.className = "px-3.5 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                btnList.className = "px-3 py-1.5 bg-brand-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5";
+                btnGrid.className = "px-3 py-1.5 text-slate-600 hover:text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
                 renderList();
             }
             lucide.createIcons();
@@ -720,23 +776,40 @@
             const list = (activeProp && reservations[activeProp.id]) ? reservations[activeProp.id] : [];
 
             let totalNights = 0;
-            let totalSena = 0;
-            let totalSaldo = 0;
+            let totalSenaRecalculada = 0;
+            let totalSaldoRecalculado = 0;
 
             list.forEach(r => {
                 let d = calculateDays(r.checkin, r.checkout);
                 totalNights += d;
+
+                let rCurr = r.moneda || 'ARS';
                 let mDiario = Number(r.montoDiario) || 0;
-                let mTotal = Number(r.montoTotal) || (mDiario * d);
-                let mReserva = Number(r.montoReserva) || 0;
-                totalSena += mReserva;
-                totalSaldo += Math.max(0, mTotal - mReserva);
+                let mTotalOriginal = Number(r.montoTotal) || (mDiario * d);
+                let mReservaOriginal = Number(r.montoReserva) || 0;
+                let mSaldoOriginal = Math.max(0, mTotalOriginal - mReservaOriginal);
+
+                let mReservaTarget = convertAmount(mReservaOriginal, rCurr, globalCurrency);
+                let mSaldoTarget = convertAmount(mSaldoOriginal, rCurr, globalCurrency);
+
+                totalSenaRecalculada += mReservaTarget;
+                totalSaldoRecalculado += mSaldoTarget;
             });
 
             document.getElementById('kpi-total-res').textContent = list.length;
             document.getElementById('kpi-total-nights').textContent = totalNights;
-            document.getElementById('kpi-total-sena').textContent = formatMoney(totalSena, globalCurrency);
-            document.getElementById('kpi-total-saldo').textContent = formatMoney(totalSaldo, globalCurrency);
+            document.getElementById('kpi-total-sena').textContent = formatMoney(totalSenaRecalculada, globalCurrency);
+            document.getElementById('kpi-total-saldo').textContent = formatMoney(totalSaldoRecalculado, globalCurrency);
+
+            const senaNote = document.getElementById('kpi-sena-note');
+            const saldoNote = document.getElementById('kpi-saldo-note');
+            if (globalCurrency === 'USD') {
+                senaNote.textContent = `A BNA compra ($${bnaBuyRate})`;
+                saldoNote.textContent = `A BNA compra ($${bnaBuyRate})`;
+            } else {
+                senaNote.textContent = `Recaudado a cuenta`;
+                saldoNote.textContent = `A cobrar en check-in`;
+            }
         }
 
         function calculateDays(inStr, outStr) {
@@ -909,14 +982,16 @@
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
-                            <th class="p-3">Huésped</th>
-                            <th class="p-3">Fechas</th>
-                            <th class="p-3 text-center">Noches</th>
-                            <th class="p-3">Tarifa Noche</th>
-                            <th class="p-3">Total</th>
-                            <th class="p-3">Seña</th>
-                            <th class="p-3 text-amber-800 bg-amber-50/50">Saldo a Cobrar</th>
-                            <th class="p-3 text-center">Acciones</th>
+                            <th class="p-3.5 min-w-[150px]">Huésped</th>
+                            <!-- COLUMNA FECHAS ENSANCHADA -->
+                            <th class="p-3.5 min-w-[190px]">Fechas (In / Out)</th>
+                            <th class="p-3.5 text-center min-w-[70px]">Noches</th>
+                            <!-- COLUMNAS DE MONTOS MÁS ANCHAS -->
+                            <th class="p-3.5 min-w-[140px]">Tarifa / Noche</th>
+                            <th class="p-3.5 min-w-[130px]">Total (${getCurrencySymbol(globalCurrency)})</th>
+                            <th class="p-3.5 min-w-[140px]">Seña (${getCurrencySymbol(globalCurrency)})</th>
+                            <th class="p-3.5 min-w-[140px] text-amber-800 bg-amber-50/50">Saldo Restante</th>
+                            <th class="p-3.5 text-center min-w-[120px]">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 font-medium">
@@ -924,54 +999,79 @@
 
             propRes.forEach((r, index) => {
                 const days = calculateDays(r.checkin, r.checkout);
-                const mDiario = Number(r.montoDiario) || 0;
-                const mTotal = Number(r.montoTotal) || (mDiario * days);
-                const mReserva = Number(r.montoReserva) || 0;
-                const saldo = Math.max(0, mTotal - mReserva);
+                const rCurr = r.moneda || 'ARS';
+
+                const originalDaily = Number(r.montoDiario) || 0;
+                const originalTotal = Number(r.montoTotal) || (originalDaily * days);
+                const originalDeposit = Number(r.montoReserva) || 0;
+                const originalBalance = Math.max(0, originalTotal - originalDeposit);
+
+                const convertedDaily = convertAmount(originalDaily, rCurr, globalCurrency);
+                const convertedTotal = convertAmount(originalTotal, rCurr, globalCurrency);
+                const convertedDeposit = convertAmount(originalDeposit, rCurr, globalCurrency);
+                const convertedBalance = convertAmount(originalBalance, rCurr, globalCurrency);
 
                 html += `
                     <tr class="hover:bg-slate-50/80 transition reservation-row" data-search="${(r.nombre + ' ' + (r.documento||'') + ' ' + (r.telefono||'')).toLowerCase()}">
-                        <td class="p-3">
+                        <td class="p-3.5">
                             <div class="font-bold text-slate-900">${r.nombre || 'Sin Nombre'}</div>
-                            <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                            <div class="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
                                 <span>${r.pasajeros || '1'} pax</span>
+                                <span class="px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded font-semibold text-[9px]">Orig: ${rCurr}</span>
                                 ${r.telefono ? `<span>• Tel: ${r.telefono}</span>` : ''}
                             </div>
                         </td>
-                        <td class="p-3 text-slate-600">
-                            <div class="text-xs font-semibold text-slate-800">${r.checkin} → ${r.checkout}</div>
-                        </td>
-                        <td class="p-3 text-center font-bold text-slate-700">${days} n</td>
-                        <td class="p-3">
-                            <div class="flex items-center gap-1">
-                                <span class="text-slate-400 font-bold">${getCurrencySymbol(globalCurrency)}</span>
-                                <input type="number" value="${mDiario || ''}" onchange="updateMontosRow('${activeProp.id}', ${index}, 'montoDiario', this.value)" class="border border-slate-200 rounded-lg px-2 py-1 w-20 text-xs bg-slate-50 focus:ring-1 focus:ring-brand-500 font-semibold">
+                        
+                        <!-- FECHAS EN UNA SOLA LÍNEA CLARA -->
+                        <td class="p-3.5 text-slate-700 whitespace-nowrap">
+                            <div class="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-1">
+                                <span>${r.checkin}</span>
+                                <span class="text-slate-400 font-normal">→</span>
+                                <span>${r.checkout}</span>
                             </div>
                         </td>
-                        <td class="p-3 font-extrabold text-slate-900">
-                            ${formatMoney(mTotal, globalCurrency)}
-                        </td>
-                        <td class="p-3">
-                            <div class="flex items-center gap-1">
-                                <span class="text-slate-400 font-bold">${getCurrencySymbol(globalCurrency)}</span>
-                                <input type="number" value="${mReserva || ''}" onchange="updateMontosRow('${activeProp.id}', ${index}, 'montoReserva', this.value)" class="border border-emerald-200 rounded-lg px-2 py-1 w-20 text-xs bg-emerald-50/40 text-emerald-800 focus:ring-1 focus:ring-emerald-500 font-bold">
+
+                        <td class="p-3.5 text-center font-bold text-slate-700 whitespace-nowrap">${days} n</td>
+                        
+                        <!-- TARIFA DIARIA CON INPUT MÁS ANCHO -->
+                        <td class="p-3.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
+                                <input type="number" step="any" value="${Math.round(convertedDaily * 100) / 100}" onchange="handleDailyRateChange('${activeProp.id}', ${index}, this.value)" class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-28 text-xs bg-slate-50 focus:ring-2 focus:ring-brand-500 font-bold text-slate-800 shadow-2xs">
                             </div>
                         </td>
-                        <td class="p-3 font-extrabold text-amber-700 bg-amber-50/30">
-                            ${formatMoney(saldo, globalCurrency)}
+
+                        <!-- TOTAL RECALCULADO HOLGADO -->
+                        <td class="p-3.5 font-extrabold text-slate-900 whitespace-nowrap text-sm">
+                            ${formatMoney(convertedTotal, globalCurrency)}
                         </td>
-                        <td class="p-3">
+
+                        <!-- SEÑA CON INPUT MÁS ANCHO -->
+                        <td class="p-3.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
+                                <input type="number" step="any" value="${Math.round(convertedDeposit * 100) / 100}" onchange="handleDepositChange('${activeProp.id}', ${index}, this.value)" class="border border-emerald-200 rounded-lg px-2.5 py-1.5 w-28 text-xs bg-emerald-50/40 text-emerald-800 focus:ring-2 focus:ring-emerald-500 font-extrabold shadow-2xs">
+                            </div>
+                        </td>
+
+                        <!-- SALDO RESTANTE DESTACADO Y COMPLETO -->
+                        <td class="p-3.5 font-extrabold text-amber-800 bg-amber-50/40 whitespace-nowrap text-sm">
+                            ${formatMoney(convertedBalance, globalCurrency)}
+                        </td>
+
+                        <!-- ACCIONES -->
+                        <td class="p-3.5">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button onclick='generateContract(${JSON.stringify(r)})' title="Ver Contrato" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <button onclick='generateContract(${JSON.stringify(r)})' title="Ver Contrato" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-brand-200/60 shadow-2xs">
                                     <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                                     Contrato
                                 </button>
                                 ${r.telefono ? `
-                                    <button onclick="sendGuestWhatsApp('${r.telefono}', '${r.nombre}', '${r.checkin}', '${saldo}')" title="WhatsApp Huésped" class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition">
+                                    <button onclick="sendGuestWhatsApp('${r.telefono}', '${r.nombre}', '${r.checkin}', '${convertedBalance}', '${globalCurrency}')" title="WhatsApp Huésped" class="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition border border-emerald-200/60 shadow-2xs">
                                         <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
                                     </button>
                                 ` : ''}
-                                <button onclick="deleteReservationItem('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}', '${r.checkin}')" title="Archivar" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition">
+                                <button onclick="deleteReservationItem('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}', '${r.checkin}')" title="Archivar" class="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition border border-rose-200/60 shadow-2xs">
                                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                 </button>
                             </div>
@@ -994,22 +1094,45 @@
             });
         }
 
-        function sendGuestWhatsApp(phone, name, checkin, balance) {
+        function sendGuestWhatsApp(phone, name, checkin, balance, curr) {
             let cleanPhone = phone.replace(/[^0-9]/g, '');
             if (!cleanPhone.startsWith('54')) cleanPhone = '54' + cleanPhone;
-            const sym = getCurrencySymbol(globalCurrency);
-            const msg = encodeURIComponent(`¡Hola ${name}! Te escribimos de "Estar Cerca Del Mar". Te recordamos tu estadía con ingreso el ${checkin}. El saldo restante al ingresar es de ${sym} ${Number(balance).toLocaleString('es-AR')}. ¡Cualquier duda estamos a disposición!`);
+            const sym = getCurrencySymbol(curr);
+            const msg = encodeURIComponent(`¡Hola ${name}! Te escribimos de "Estar Cerca Del Mar". Te recordamos tu estadía con ingreso el ${checkin}. El saldo restante a cancelar al ingresar es de ${sym} ${Number(balance).toLocaleString('es-AR')}. ¡Cualquier duda estamos a tu disposición!`);
             window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank');
         }
 
-        async function updateMontosRow(propId, index, field, value) {
-            const numericValue = parseFloat(value) || 0;
+        async function handleDailyRateChange(propId, index, enteredValue) {
+            const valInActiveCurr = parseFloat(enteredValue) || 0;
             if (reservations[propId] && reservations[propId][index]) {
-                reservations[propId][index][field] = numericValue;
                 const r = reservations[propId][index];
+                const rCurr = r.moneda || 'ARS';
+                
+                const valInOriginalCurr = convertAmount(valInActiveCurr, globalCurrency, rCurr);
+                r.montoDiario = valInOriginalCurr;
+                
+                const days = calculateDays(r.checkin, r.checkout);
+                r.montoTotal = r.montoDiario * days;
+                r.montoRestante = Math.max(0, r.montoTotal - (Number(r.montoReserva) || 0));
+
+                renderList();
+                renderKPIs();
+                await postDataToCloud({ action: 'saveReservations', reservations: reservations });
+            }
+        }
+
+        async function handleDepositChange(propId, index, enteredValue) {
+            const valInActiveCurr = parseFloat(enteredValue) || 0;
+            if (reservations[propId] && reservations[propId][index]) {
+                const r = reservations[propId][index];
+                const rCurr = r.moneda || 'ARS';
+                
+                const valInOriginalCurr = convertAmount(valInActiveCurr, globalCurrency, rCurr);
+                r.montoReserva = valInOriginalCurr;
+                
                 const days = calculateDays(r.checkin, r.checkout);
                 r.montoTotal = (Number(r.montoDiario) || 0) * days;
-                r.montoRestante = Math.max(0, r.montoTotal - (Number(r.montoReserva) || 0));
+                r.montoRestante = Math.max(0, r.montoTotal - r.montoReserva);
 
                 renderList();
                 renderKPIs();
@@ -1050,12 +1173,21 @@
         function openNewReservationModal() {
             renderPropertiesSelect();
             document.getElementById('new-res-modal').classList.remove('hidden');
+            document.getElementById('modal-res-currency').value = globalCurrency;
             document.getElementById('modal-res-in').value = new Date().toISOString().split('T')[0];
             const out = new Date();
             out.setDate(out.getDate() + 3);
             document.getElementById('modal-res-out').value = out.toISOString().split('T')[0];
+            updateModalCurrencyLabels();
             calculateModalTotals();
             lucide.createIcons();
+        }
+
+        function updateModalCurrencyLabels() {
+            const curr = document.getElementById('modal-res-currency').value;
+            const sym = getCurrencySymbol(curr);
+            document.querySelectorAll('.modal-curr-sym').forEach(el => el.textContent = sym);
+            calculateModalTotals();
         }
 
         function closeNewReservationModal() {
@@ -1068,6 +1200,7 @@
             const outDate = document.getElementById('modal-res-out').value;
             const daily = parseFloat(document.getElementById('modal-res-daily').value) || 0;
             const deposit = parseFloat(document.getElementById('modal-res-deposit').value) || 0;
+            const modalCurr = document.getElementById('modal-res-currency').value;
 
             const days = calculateDays(inDate, outDate);
             document.getElementById('modal-res-days-preview').textContent = `${days} noches de estadía`;
@@ -1076,7 +1209,7 @@
             document.getElementById('modal-res-total').value = total;
 
             const balance = Math.max(0, total - deposit);
-            document.getElementById('modal-res-balance').textContent = formatMoney(balance, globalCurrency);
+            document.getElementById('modal-res-balance').textContent = formatMoney(balance, modalCurr);
         }
 
         async function saveManualReservation(e) {
@@ -1088,6 +1221,7 @@
             const daily = parseFloat(document.getElementById('modal-res-daily').value) || 0;
             const total = daily * days;
             const deposit = parseFloat(document.getElementById('modal-res-deposit').value) || 0;
+            const modalCurr = document.getElementById('modal-res-currency').value;
 
             const newRes = {
                 timestamp: new Date().toISOString(),
@@ -1102,7 +1236,7 @@
                 montoTotal: total,
                 montoReserva: deposit,
                 montoRestante: Math.max(0, total - deposit),
-                moneda: globalCurrency,
+                moneda: modalCurr,
                 pais: 'Argentina'
             };
 
@@ -1153,7 +1287,7 @@
                         <tr class="hover:bg-slate-50">
                             <td class="p-2.5 font-bold">${item.propertyId || '-'}</td>
                             <td class="p-2.5 font-bold text-slate-900">${item.nombre || 'Sin Nombre'}</td>
-                            <td class="p-2.5 text-slate-600">${item.checkin} → ${item.checkout}</td>
+                            <td class="p-2.5 text-slate-600 whitespace-nowrap">${item.checkin} → ${item.checkout}</td>
                             <td class="p-2.5 text-center flex items-center justify-center gap-2">
                                 <button onclick="restoreHistoryRow(${item.rowIndex})" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition">Restaurar</button>
                                 <button onclick="deleteHistoryRowPerm(${item.rowIndex})" class="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold transition">Eliminar</button>
@@ -1220,6 +1354,7 @@
                             </p>
                             <div class="flex items-center gap-3 text-xs text-slate-400 mt-3 font-medium">
                                 <span>Capacidad: <strong>${p.capacity || '4'} pax</strong></span>
+                                <span>• Moneda: <strong>${p.currency || 'ARS'}</strong></span>
                                 <span>• Reservas: <strong>${resCount}</strong></span>
                             </div>
                         </div>
@@ -1306,11 +1441,19 @@
             const address = activeProp ? activeProp.address : '[DOMICILIO DE LA PROPIEDAD]';
 
             const days = calculateDays(data.checkin, data.checkout);
-            const mDiario = Number(data.montoDiario) || 0;
-            const mTotal = data.montoTotal ? Number(data.montoTotal) : (mDiario * days);
-            const mReserva = Number(data.montoReserva) || 0;
-            const curr = data.moneda || globalCurrency;
-            const sym = getCurrencySymbol(curr);
+            const rCurr = data.moneda || 'ARS';
+
+            const origDaily = Number(data.montoDiario) || 0;
+            const origTotal = data.montoTotal ? Number(data.montoTotal) : (origDaily * days);
+            const origDeposit = Number(data.montoReserva) || 0;
+
+            const convertedDaily = convertAmount(origDaily, rCurr, globalCurrency);
+            const convertedTotal = convertAmount(origTotal, rCurr, globalCurrency);
+            const convertedDeposit = convertAmount(origDeposit, rCurr, globalCurrency);
+            const convertedBalance = Math.max(0, convertedTotal - convertedDeposit);
+
+            const sym = getCurrencySymbol(globalCurrency);
+            const currencyName = globalCurrency === 'USD' ? 'dólares estadounidenses (USD)' : 'pesos argentinos (ARS)';
 
             content.innerHTML = `
                 <div class="text-center border-b border-slate-200 pb-4 mb-6">
@@ -1321,7 +1464,7 @@
                 
                 <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines exclusivamente turísticos de LA PARTE LOCATARIA y su grupo conviviente (<strong>${data.pasajeros || '1'}</strong> pasajeros). Están prohibidas cualesquiera sublocaciones y/o transmisiones a terceros.</p>
                 
-                <p><strong>TERCERA:</strong> El alquiler por todo el plazo pactado será de <strong>${sym} ${mTotal.toLocaleString('es-AR')}</strong> (a razón de ${sym} ${mDiario.toLocaleString('es-AR')} por noche), habiéndose abonado en concepto de seña/reserva la suma de <strong>${sym} ${mReserva.toLocaleString('es-AR')}</strong> y debiendo cancelarse el saldo restante de <strong>${sym} ${(mTotal - mReserva).toLocaleString('es-AR')}</strong> al momento de ingresar a la propiedad.</p>
+                <p><strong>TERCERA:</strong> El alquiler por todo el plazo pactado será de <strong>${sym} ${convertedTotal.toLocaleString('es-AR')} ${currencyName}</strong> (a razón de ${sym} ${convertedDaily.toLocaleString('es-AR')} por noche), habiéndose abonado en concepto de seña/reserva la suma de <strong>${sym} ${convertedDeposit.toLocaleString('es-AR')}</strong> y debiendo cancelarse el saldo restante de <strong>${sym} ${convertedBalance.toLocaleString('es-AR')}</strong> al momento de ingresar al inmueble locado.</p>
                 
                 <p><strong>CUARTA:</strong> Además del alquiler, queda a cargo de LA PARTE LOCATARIA el depósito de garantía por daños o roturas fijado en pesos CIEN MIL ($ 100.000) o su equivalente en dólares, reintegrable al egreso previa revisión del inventario.</p>
                 
