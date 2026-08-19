@@ -88,10 +88,10 @@
             <!-- Controles y Acciones Superiores -->
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
                 
-                <!-- Cotización BNA Compra -->
+                <!-- Cotización BNA Venta -->
                 <div onclick="promptManualBnaRate()" title="Clic para actualizar o editar cotización BNA" class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs">
                     <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-600"></i>
-                    <span>BNA Compra:</span>
+                    <span>BNA Venta:</span>
                     <span id="bna-rate-display" class="font-extrabold">$ --</span>
                 </div>
 
@@ -349,7 +349,7 @@
     <footer class="bg-white/80 border-t border-slate-200/80 py-4 mt-auto">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400 font-medium flex flex-col sm:flex-row justify-between items-center gap-2">
             <span>Estar Cerca Del Mar • Mar del Plata</span>
-            <span class="text-[11px] text-slate-400">Cotización de referencia: Dólar Oficial Banco Nación (Compra)</span>
+            <span class="text-[11px] text-slate-400">Cotización de referencia: Dólar Oficial Banco Nación (Venta)</span>
         </div>
     </footer>
 
@@ -544,7 +544,7 @@
         let currentCalendarDate = new Date();
         let globalCurrency = localStorage.getItem('app_currency') || 'ARS';
         
-        let bnaBuyRate = parseFloat(localStorage.getItem('bna_buy_rate')) || 1420;
+        let bnasellRate = parseFloat(localStorage.getItem('bna_sell_rate')) || 1420;
 
         async function initApp() {
             lucide.createIcons();
@@ -557,12 +557,12 @@
             try {
                 const res = await fetch('https://dolarapi.com/v1/dolares/oficial');
                 const data = await res.json();
-                if (data && data.compra) {
-                    bnaBuyRate = parseFloat(data.compra);
-                    localStorage.setItem('bna_buy_rate', bnaBuyRate);
+                if (data && data.venta) {
+                    bnasellRate = parseFloat(data.venta);
+                    localStorage.setItem('bna_sell_rate', bnaSellRate);
                 }
             } catch (e) {
-                console.warn("No se pudo obtener cotización automática del BNA, usando valor en caché:", bnaBuyRate);
+                console.warn("No se pudo obtener cotización automática del BNA, usando valor en caché:", bnaSellRate);
             }
             updateBnaDisplay();
         }
@@ -570,19 +570,19 @@
         function updateBnaDisplay() {
             const el = document.getElementById('bna-rate-display');
             const elMob = document.getElementById('bna-rate-badge-mob');
-            if (el) el.textContent = `$ ${bnaBuyRate.toLocaleString('es-AR')}`;
-            if (elMob) elMob.textContent = `BNA: $ ${bnaBuyRate.toLocaleString('es-AR')}`;
+            if (el) el.textContent = `$ ${bnaSellRate.toLocaleString('es-AR')}`;
+            if (elMob) elMob.textContent = `BNA: $ ${bnaSellRate.toLocaleString('es-AR')}`;
         }
 
         function promptManualBnaRate() {
-            const val = prompt("Cotización actual Dólar Oficial BNA (Compra):", bnaBuyRate);
+            const val = prompt("Cotización actual Dólar Oficial BNA (Venta):", bnaSellRate);
             if (val && !isNaN(parseFloat(val)) && parseFloat(val) > 0) {
-                bnaBuyRate = parseFloat(val);
-                localStorage.setItem('bna_buy_rate', bnaBuyRate);
+                bnaSellRate = parseFloat(val);
+                localStorage.setItem('bna_sell_rate', bnaSellRate);
                 updateBnaDisplay();
                 renderKPIs();
                 renderList();
-                alert(`¡Cotización actualizada a $ ${bnaBuyRate}! Los valores se han recalculado.`);
+                alert(`¡Cotización actualizada a $ ${bnaSellRate}! Los valores se han recalculado.`);
             }
         }
 
@@ -620,9 +620,9 @@
             if (orig === target) return val;
 
             if (orig === 'USD' && target === 'ARS') {
-                return val * bnaBuyRate;
+                return val * bnnSellRate;
             } else if (orig === 'ARS' && target === 'USD') {
-                return bnaBuyRate > 0 ? (val / bnaBuyRate) : 0;
+                return bnaSellRate > 0 ? (val / bnaSellRate) : 0;
             }
             return val;
         }
@@ -804,8 +804,8 @@
             const senaNote = document.getElementById('kpi-sena-note');
             const saldoNote = document.getElementById('kpi-saldo-note');
             if (globalCurrency === 'USD') {
-                senaNote.textContent = `A BNA compra ($${bnaBuyRate})`;
-                saldoNote.textContent = `A BNA compra ($${bnaBuyRate})`;
+                senaNote.textContent = `A BNA venta ($${bnaSellRate})`;
+                saldoNote.textContent = `A BNA venta ($${bnaSellRate})`;
             } else {
                 senaNote.textContent = `Recaudado a cuenta`;
                 saldoNote.textContent = `A cobrar en check-in`;
