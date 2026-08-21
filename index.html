@@ -419,18 +419,22 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-2.5">
+                <div class="grid grid-cols-4 gap-2">
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Valor / Noche (<span class="modal-curr-sym">$</span>)</label>
-                        <input type="number" id="modal-res-daily" value="0" step="any" oninput="calculateModalTotals()" class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 font-bold">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tarifa / Noche</label>
+                        <input type="number" id="modal-res-daily" value="0" step="any" oninput="calculateModalTotals()" class="w-full border border-slate-200 rounded-xl px-2 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50 font-bold">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total (<span class="modal-curr-sym">$</span>)</label>
-                        <input type="number" id="modal-res-total" value="0" step="any" readonly class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs bg-slate-100 font-extrabold text-slate-900">
+                        <label class="block text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1">% Desc.</label>
+                        <input type="number" id="modal-res-discount" value="0" min="0" max="99" oninput="calculateModalTotals()" class="w-full border border-indigo-200 rounded-xl px-2 py-2 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-indigo-50/40 font-bold text-indigo-700">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Seña (<span class="modal-curr-sym">$</span>)</label>
-                        <input type="number" id="modal-res-deposit" value="0" step="any" oninput="calculateModalTotals()" class="w-full border border-emerald-200 rounded-xl px-2.5 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-emerald-50/50 font-bold text-emerald-800">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total</label>
+                        <input type="number" id="modal-res-total" value="0" step="any" readonly class="w-full border border-slate-200 rounded-xl px-2 py-2 text-xs bg-slate-100 font-extrabold text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Seña</label>
+                        <input type="number" id="modal-res-deposit" value="0" step="any" oninput="calculateModalTotals()" class="w-full border border-emerald-200 rounded-xl px-2 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-emerald-50/50 font-bold text-emerald-800">
                     </div>
                 </div>
 
@@ -543,7 +547,6 @@
         let currentCalendarDate = new Date();
         let globalCurrency = localStorage.getItem('app_currency') || 'ARS';
         
-        // Cotización oficial de VENTA del BNA (con fallback seguro)
         let bnaRate = parseFloat(localStorage.getItem('bna_rate')) || 1480;
 
         async function initApp() {
@@ -553,9 +556,6 @@
             await loadDataFromCloud();
         }
 
-        /**
-         * Obtiene la cotización del Dólar Oficial VENTA (Banco Nación)
-         */
         async function fetchBnaRate() {
             try {
                 const res = await fetch('https://dolarapi.com/v1/dolares/oficial');
@@ -618,9 +618,6 @@
             return (curr || globalCurrency) === 'USD' ? 'U$S' : '$';
         }
 
-        /**
-         * Convierte dinámicamente un monto entre monedas según la cotización BNA Venta
-         */
         function convertAmount(amount, originalCurrency, targetCurrency) {
             let val = Number(amount) || 0;
             const orig = (originalCurrency || 'ARS').toUpperCase();
@@ -629,9 +626,9 @@
             if (orig === target) return val;
 
             if (orig === 'USD' && target === 'ARS') {
-                return val * bnaRate; // Multiplica por valor Venta BNA
+                return val * bnaRate;
             } else if (orig === 'ARS' && target === 'USD') {
-                return bnaRate > 0 ? (val / bnaRate) : 0; // Divide por valor Venta BNA
+                return bnaRate > 0 ? (val / bnaRate) : 0;
             }
             return val;
         }
@@ -794,7 +791,9 @@
 
                 let rCurr = r.moneda || 'ARS';
                 let mDiario = Number(r.montoDiario) || 0;
-                let mTotalOriginal = Number(r.montoTotal) || (mDiario * d);
+                let descPercent = Number(r.descuento) || 0;
+                let subtotal = mDiario * d;
+                let mTotalOriginal = Number(r.montoTotal) || (subtotal * (1 - descPercent / 100));
                 let mReservaOriginal = Number(r.montoReserva) || 0;
                 let mSaldoOriginal = Math.max(0, mTotalOriginal - mReservaOriginal);
 
@@ -992,11 +991,13 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
                             <th class="p-3.5 min-w-[150px]">Huésped</th>
-                            <th class="p-3.5 min-w-[190px]">Fechas (In / Out)</th>
+                            <th class="p-3.5 min-w-[210px]">Fechas (In / Out)</th>
                             <th class="p-3.5 text-center min-w-[70px]">Noches</th>
-                            <th class="p-3.5 min-w-[140px]">Tarifa / Noche</th>
-                            <th class="p-3.5 min-w-[130px]">Total (${getCurrencySymbol(globalCurrency)})</th>
-                            <th class="p-3.5 min-w-[140px]">Seña (${getCurrencySymbol(globalCurrency)})</th>
+                            <th class="p-3.5 min-w-[135px]">Tarifa / Noche</th>
+                            <!-- COLUMNA % DESCUENTO -->
+                            <th class="p-3.5 min-w-[95px] text-center text-indigo-900">% Desc.</th>
+                            <th class="p-3.5 min-w-[135px]">Total (${getCurrencySymbol(globalCurrency)})</th>
+                            <th class="p-3.5 min-w-[135px]">Seña (${getCurrencySymbol(globalCurrency)})</th>
                             <th class="p-3.5 min-w-[140px] text-amber-800 bg-amber-50/50">Saldo Restante</th>
                             <th class="p-3.5 text-center min-w-[120px]">Acciones</th>
                         </tr>
@@ -1007,9 +1008,11 @@
             propRes.forEach((r, index) => {
                 const days = calculateDays(r.checkin, r.checkout);
                 const rCurr = r.moneda || 'ARS';
+                const discount = Number(r.descuento) || 0;
 
                 const originalDaily = Number(r.montoDiario) || 0;
-                const originalTotal = Number(r.montoTotal) || (originalDaily * days);
+                const subtotal = originalDaily * days;
+                const originalTotal = Number(r.montoTotal) || (subtotal * (1 - (discount / 100)));
                 const originalDeposit = Number(r.montoReserva) || 0;
                 const originalBalance = Math.max(0, originalTotal - originalDeposit);
 
@@ -1029,38 +1032,70 @@
                             </div>
                         </td>
                         
+                        <!-- FECHAS CON FLECHAS ARRIBA Y ABAJO DÍA POR DÍA -->
                         <td class="p-3.5 text-slate-700 whitespace-nowrap">
-                            <div class="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-1">
-                                <span>${r.checkin}</span>
+                            <div class="flex items-center gap-2 font-bold text-slate-800 tracking-tight text-xs">
+                                <!-- Check-in con flechas -->
+                                <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
+                                    <span class="text-slate-400 text-[10px]">In:</span>
+                                    <span>${r.checkin}</span>
+                                    <div class="flex flex-col leading-none ml-0.5">
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkin', 1)" title="Sumar 1 día" class="text-slate-400 hover:text-brand-600 text-[9px] p-0.5 leading-none">▲</button>
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkin', -1)" title="Restar 1 día" class="text-slate-400 hover:text-brand-600 text-[9px] p-0.5 leading-none">▼</button>
+                                    </div>
+                                </div>
+
                                 <span class="text-slate-400 font-normal">→</span>
-                                <span>${r.checkout}</span>
+
+                                <!-- Check-out con flechas -->
+                                <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
+                                    <span class="text-slate-400 text-[10px]">Out:</span>
+                                    <span>${r.checkout}</span>
+                                    <div class="flex flex-col leading-none ml-0.5">
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkout', 1)" title="Sumar 1 día" class="text-slate-400 hover:text-brand-600 text-[9px] p-0.5 leading-none">▲</button>
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkout', -1)" title="Restar 1 día" class="text-slate-400 hover:text-brand-600 text-[9px] p-0.5 leading-none">▼</button>
+                                    </div>
+                                </div>
                             </div>
                         </td>
 
                         <td class="p-3.5 text-center font-bold text-slate-700 whitespace-nowrap">${days} n</td>
                         
+                        <!-- TARIFA DIARIA -->
                         <td class="p-3.5">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
-                                <input type="number" step="any" value="${Math.round(convertedDaily * 100) / 100}" onchange="handleDailyRateChange('${activeProp.id}', ${index}, this.value)" class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-28 text-xs bg-slate-50 focus:ring-2 focus:ring-brand-500 font-bold text-slate-800 shadow-2xs">
+                                <input type="number" step="any" value="${Math.round(convertedDaily * 100) / 100}" onchange="handleDailyRateChange('${activeProp.id}', ${index}, this.value)" class="border border-slate-200 rounded-lg px-2.5 py-1.5 w-24 text-xs bg-slate-50 focus:ring-2 focus:ring-brand-500 font-bold text-slate-800 shadow-2xs">
                             </div>
                         </td>
 
+                        <!-- CAMPO % DESCUENTO (2 DÍGITOS) -->
+                        <td class="p-3.5 text-center">
+                            <div class="inline-flex items-center gap-1 bg-indigo-50/50 border border-indigo-200/70 px-2 py-1 rounded-lg">
+                                <input type="number" min="0" max="99" value="${discount || ''}" placeholder="0" onchange="handleDiscountChange('${activeProp.id}', ${index}, this.value)" class="w-10 text-center text-xs font-bold text-indigo-700 bg-transparent focus:outline-none">
+                                <span class="text-indigo-400 font-bold text-[10px]">%</span>
+                            </div>
+                        </td>
+
+                        <!-- TOTAL RECALCULADO (CON DESCUENTO) -->
                         <td class="p-3.5 font-extrabold text-slate-900 whitespace-nowrap text-sm">
                             ${formatMoney(convertedTotal, globalCurrency)}
                         </td>
 
+                        <!-- SEÑA -->
                         <td class="p-3.5">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
-                                <input type="number" step="any" value="${Math.round(convertedDeposit * 100) / 100}" onchange="handleDepositChange('${activeProp.id}', ${index}, this.value)" class="border border-emerald-200 rounded-lg px-2.5 py-1.5 w-28 text-xs bg-emerald-50/40 text-emerald-800 focus:ring-2 focus:ring-emerald-500 font-extrabold shadow-2xs">
+                                <input type="number" step="any" value="${Math.round(convertedDeposit * 100) / 100}" onchange="handleDepositChange('${activeProp.id}', ${index}, this.value)" class="border border-emerald-200 rounded-lg px-2.5 py-1.5 w-24 text-xs bg-emerald-50/40 text-emerald-800 focus:ring-2 focus:ring-emerald-500 font-extrabold shadow-2xs">
                             </div>
                         </td>
 
+                        <!-- SALDO RESTANTE -->
                         <td class="p-3.5 font-extrabold text-amber-800 bg-amber-50/40 whitespace-nowrap text-sm">
                             ${formatMoney(convertedBalance, globalCurrency)}
                         </td>
 
+                        <!-- ACCIONES -->
                         <td class="p-3.5">
                             <div class="flex items-center justify-center gap-1.5">
                                 <button onclick='generateContract(${JSON.stringify(r)})' title="Ver Contrato" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-brand-200/60 shadow-2xs">
@@ -1095,6 +1130,46 @@
             });
         }
 
+        async function adjustReservationDate(propId, index, field, deltaDays) {
+            if (reservations[propId] && reservations[propId][index]) {
+                const r = reservations[propId][index];
+                const curDateStr = r[field];
+                if (!curDateStr) return;
+
+                const d = new Date(curDateStr + 'T00:00:00');
+                d.setDate(d.getDate() + deltaDays);
+                r[field] = d.toISOString().split('T')[0];
+
+                const days = calculateDays(r.checkin, r.checkout);
+                const discount = Number(r.descuento) || 0;
+                const subtotal = (Number(r.montoDiario) || 0) * days;
+                r.montoTotal = subtotal * (1 - (discount / 100));
+                r.montoRestante = Math.max(0, r.montoTotal - (Number(r.montoReserva) || 0));
+
+                renderList();
+                renderCalendars();
+                renderKPIs();
+                await postDataToCloud({ action: 'saveReservations', reservations: reservations });
+            }
+        }
+
+        async function handleDiscountChange(propId, index, enteredValue) {
+            let discount = Math.min(99, Math.max(0, parseFloat(enteredValue) || 0));
+            if (reservations[propId] && reservations[propId][index]) {
+                const r = reservations[propId][index];
+                r.descuento = discount;
+
+                const days = calculateDays(r.checkin, r.checkout);
+                const subtotal = (Number(r.montoDiario) || 0) * days;
+                r.montoTotal = subtotal * (1 - (discount / 100));
+                r.montoRestante = Math.max(0, r.montoTotal - (Number(r.montoReserva) || 0));
+
+                renderList();
+                renderKPIs();
+                await postDataToCloud({ action: 'saveReservations', reservations: reservations });
+            }
+        }
+
         function sendGuestWhatsApp(phone, name, checkin, balance, curr) {
             let cleanPhone = phone.replace(/[^0-9]/g, '');
             if (!cleanPhone.startsWith('54')) cleanPhone = '54' + cleanPhone;
@@ -1108,12 +1183,14 @@
             if (reservations[propId] && reservations[propId][index]) {
                 const r = reservations[propId][index];
                 const rCurr = r.moneda || 'ARS';
+                const discount = Number(r.descuento) || 0;
                 
                 const valInOriginalCurr = convertAmount(valInActiveCurr, globalCurrency, rCurr);
                 r.montoDiario = valInOriginalCurr;
                 
                 const days = calculateDays(r.checkin, r.checkout);
-                r.montoTotal = r.montoDiario * days;
+                const subtotal = r.montoDiario * days;
+                r.montoTotal = subtotal * (1 - (discount / 100));
                 r.montoRestante = Math.max(0, r.montoTotal - (Number(r.montoReserva) || 0));
 
                 renderList();
@@ -1132,7 +1209,9 @@
                 r.montoReserva = valInOriginalCurr;
                 
                 const days = calculateDays(r.checkin, r.checkout);
-                r.montoTotal = (Number(r.montoDiario) || 0) * days;
+                const discount = Number(r.descuento) || 0;
+                const subtotal = (Number(r.montoDiario) || 0) * days;
+                r.montoTotal = subtotal * (1 - (discount / 100));
                 r.montoRestante = Math.max(0, r.montoTotal - r.montoReserva);
 
                 renderList();
@@ -1186,8 +1265,6 @@
 
         function updateModalCurrencyLabels() {
             const curr = document.getElementById('modal-res-currency').value;
-            const sym = getCurrencySymbol(curr);
-            document.querySelectorAll('.modal-curr-sym').forEach(el => el.textContent = sym);
             calculateModalTotals();
         }
 
@@ -1200,14 +1277,16 @@
             const inDate = document.getElementById('modal-res-in').value;
             const outDate = document.getElementById('modal-res-out').value;
             const daily = parseFloat(document.getElementById('modal-res-daily').value) || 0;
+            const discount = Math.min(99, Math.max(0, parseFloat(document.getElementById('modal-res-discount').value) || 0));
             const deposit = parseFloat(document.getElementById('modal-res-deposit').value) || 0;
             const modalCurr = document.getElementById('modal-res-currency').value;
 
             const days = calculateDays(inDate, outDate);
             document.getElementById('modal-res-days-preview').textContent = `${days} noches de estadía`;
 
-            const total = daily * days;
-            document.getElementById('modal-res-total').value = total;
+            const subtotal = daily * days;
+            const total = subtotal * (1 - (discount / 100));
+            document.getElementById('modal-res-total').value = Math.round(total * 100) / 100;
 
             const balance = Math.max(0, total - deposit);
             document.getElementById('modal-res-balance').textContent = formatMoney(balance, modalCurr);
@@ -1220,7 +1299,9 @@
             const outDate = document.getElementById('modal-res-out').value;
             const days = calculateDays(inDate, outDate);
             const daily = parseFloat(document.getElementById('modal-res-daily').value) || 0;
-            const total = daily * days;
+            const discount = Math.min(99, Math.max(0, parseFloat(document.getElementById('modal-res-discount').value) || 0));
+            const subtotal = daily * days;
+            const total = subtotal * (1 - (discount / 100));
             const deposit = parseFloat(document.getElementById('modal-res-deposit').value) || 0;
             const modalCurr = document.getElementById('modal-res-currency').value;
 
@@ -1234,6 +1315,7 @@
                 checkout: outDate,
                 propertyId: propId,
                 montoDiario: daily,
+                descuento: discount,
                 montoTotal: total,
                 montoReserva: deposit,
                 montoRestante: Math.max(0, total - deposit),
@@ -1443,9 +1525,11 @@
 
             const days = calculateDays(data.checkin, data.checkout);
             const rCurr = data.moneda || 'ARS';
+            const discount = Number(data.descuento) || 0;
 
             const origDaily = Number(data.montoDiario) || 0;
-            const origTotal = data.montoTotal ? Number(data.montoTotal) : (origDaily * days);
+            const subtotal = origDaily * days;
+            const origTotal = data.montoTotal ? Number(data.montoTotal) : (subtotal * (1 - (discount / 100)));
             const origDeposit = Number(data.montoReserva) || 0;
 
             const convertedDaily = convertAmount(origDaily, rCurr, globalCurrency);
@@ -1465,7 +1549,7 @@
                 
                 <p><strong>SEGUNDA:</strong> El INMUEBLE LOCADO sólo podrá destinarse a vivienda con fines exclusivamente turísticos de LA PARTE LOCATARIA y su grupo conviviente (<strong>${data.pasajeros || '1'}</strong> pasajeros). Están prohibidas cualesquiera sublocaciones y/o transmisiones a terceros.</p>
                 
-                <p><strong>TERCERA:</strong> El alquiler por todo el plazo pactado será de <strong>${sym} ${convertedTotal.toLocaleString('es-AR')} ${currencyName}</strong> (a razón de ${sym} ${convertedDaily.toLocaleString('es-AR')} por noche), habiéndose abonado en concepto de seña/reserva la suma de <strong>${sym} ${convertedDeposit.toLocaleString('es-AR')}</strong> y debiendo cancelarse el saldo restante de <strong>${sym} ${convertedBalance.toLocaleString('es-AR')}</strong> al momento de ingresar al inmueble locado.</p>
+                <p><strong>TERCERA:</strong> El alquiler por todo el plazo pactado será de <strong>${sym} ${convertedTotal.toLocaleString('es-AR')} ${currencyName}</strong> (a razón de ${sym} ${convertedDaily.toLocaleString('es-AR')} por noche${discount > 0 ? ` con un ${discount}% de bonificación aplicada` : ''}), habiéndose abonado en concepto de seña/reserva la suma de <strong>${sym} ${convertedDeposit.toLocaleString('es-AR')}</strong> y debiendo cancelarse el saldo restante de <strong>${sym} ${convertedBalance.toLocaleString('es-AR')}</strong> al momento de ingresar al inmueble locado.</p>
                 
                 <p><strong>CUARTA:</strong> Además del alquiler, queda a cargo de LA PARTE LOCATARIA el depósito de garantía por daños o roturas fijado en pesos CIEN MIL ($ 100.000) o su equivalente en dólares, reintegrable al egreso previa revisión del inventario.</p>
                 
