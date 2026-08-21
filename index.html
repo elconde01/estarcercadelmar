@@ -292,20 +292,37 @@
             </section>
 
             <!-- VISTA B: LISTADO CRONOLÓGICO Y CONTROL DE SALDOS -->
-            <section id="view-list" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-5 sm:p-6 space-y-4 hidden">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 class="text-base font-extrabold text-slate-900">Listado de Reservas y Saldos</h2>
-                        <p class="text-xs text-slate-500 mt-0.5">Control de pagos, contratos y recálculo automático por BNA (Venta)</p>
+            <section id="view-list" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-6 space-y-4 hidden">
+                
+                <!-- Encabezado con Título y Navegación Móvil de Reservas -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div class="flex items-center justify-between w-full sm:w-auto gap-3">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-900">Listado de Reservas y Saldos</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Control de pagos, contratos y saldos</p>
+                        </div>
+
+                        <!-- CONTROLES FLECHA IZQUIERDA / DERECHA Y CONTADOR EN MÓVIL -->
+                        <div id="mobile-res-pagination" class="flex md:hidden items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+                            <button onclick="prevMobileReservation()" id="btn-prev-mob" class="p-1.5 hover:bg-white rounded-lg text-slate-700 font-bold transition">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                            </button>
+                            <span id="mobile-res-counter" class="text-xs font-extrabold px-2.5 text-slate-800 tracking-tight">0 / 0</span>
+                            <button onclick="nextMobileReservation()" id="btn-next-mob" class="p-1.5 hover:bg-white rounded-lg text-slate-700 font-bold transition">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </div>
 
+                    <!-- Buscador Rápido -->
                     <div class="relative w-full sm:w-64">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
                         <input type="text" id="search-input" onkeyup="filterReservationsList()" placeholder="Buscar por huésped, DNI..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none font-medium">
                     </div>
                 </div>
 
-                <div id="list-container" class="overflow-x-auto">
+                <!-- CONTENEDOR DUAL: TABLA EN ESCRITORIO / TARJETA VERTICAL EN MÓVIL -->
+                <div id="list-container">
                     <p class="text-slate-400 text-xs py-12 text-center">Cargando reservas...</p>
                 </div>
             </section>
@@ -554,6 +571,7 @@
         let globalCurrency = localStorage.getItem('app_currency') || 'ARS';
         
         let bnaRate = parseFloat(localStorage.getItem('bna_rate')) || 1480;
+        let mobileReservationIndex = 0; // Índice de la reserva visible en modo móvil
 
         async function initApp() {
             lucide.createIcons();
@@ -788,6 +806,7 @@
 
         function changeActiveProperty() {
             activePropertyId = document.getElementById('active-property-select').value;
+            mobileReservationIndex = 0;
             renderCalendars();
             renderList();
             renderKPIs();
@@ -988,6 +1007,27 @@
             calculateModalTotals();
         }
 
+        /* Paginación en Modo Móvil */
+        function prevMobileReservation() {
+            const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
+            const propRes = (activeProp && reservations[activeProp.id]) ? reservations[activeProp.id] : [];
+            if (propRes.length === 0) return;
+            if (mobileReservationIndex > 0) {
+                mobileReservationIndex--;
+                renderList();
+            }
+        }
+
+        function nextMobileReservation() {
+            const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
+            const propRes = (activeProp && reservations[activeProp.id]) ? reservations[activeProp.id] : [];
+            if (propRes.length === 0) return;
+            if (mobileReservationIndex < propRes.length - 1) {
+                mobileReservationIndex++;
+                renderList();
+            }
+        }
+
         function renderList() {
             const container = document.getElementById('list-container');
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
@@ -997,27 +1037,171 @@
             }
             const propRes = reservations[activeProp.id] || [];
 
+            // Actualizar contador del paginador móvil
+            const counterMob = document.getElementById('mobile-res-counter');
+            const btnPrev = document.getElementById('btn-prev-mob');
+            const btnNext = document.getElementById('btn-next-mob');
+
             if (propRes.length === 0) {
+                if (counterMob) counterMob.textContent = "0 / 0";
                 container.innerHTML = `<p class="text-slate-400 text-xs py-12 text-center">No hay reservas activas registradas para ${activeProp.name}.</p>`;
                 return;
             }
 
-            let html = `
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
-                            <th class="p-3.5 min-w-[150px]">Huésped</th>
-                            <th class="p-3.5 min-w-[210px]">Fechas (In / Out)</th>
-                            <th class="p-3.5 text-center min-w-[70px]">Noches</th>
-                            <th class="p-3.5 min-w-[135px]">Tarifa / Noche</th>
-                            <th class="p-3.5 min-w-[95px] text-center text-indigo-900">% Desc.</th>
-                            <th class="p-3.5 min-w-[135px]">Total (${getCurrencySymbol(globalCurrency)})</th>
-                            <th class="p-3.5 min-w-[135px]">Seña (${getCurrencySymbol(globalCurrency)})</th>
-                            <th class="p-3.5 min-w-[140px] text-amber-800 bg-amber-50/50">Saldo Restante</th>
-                            <th class="p-3.5 text-center min-w-[120px]">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 font-medium">
+            if (mobileReservationIndex >= propRes.length) {
+                mobileReservationIndex = propRes.length - 1;
+            }
+            if (mobileReservationIndex < 0) mobileReservationIndex = 0;
+
+            if (counterMob) counterMob.textContent = `${mobileReservationIndex + 1} / ${propRes.length}`;
+            if (btnPrev) btnPrev.disabled = mobileReservationIndex === 0;
+            if (btnNext) btnNext.disabled = mobileReservationIndex === propRes.length - 1;
+
+            // ================= 1. VISTA MÓVIL (TARJETA VERTICAL INDIVIDUAL) =================
+            const currentMobRes = propRes[mobileReservationIndex];
+            let mobileCardHTML = '';
+
+            if (currentMobRes) {
+                const r = currentMobRes;
+                const index = mobileReservationIndex;
+                const days = calculateDays(r.checkin, r.checkout);
+                const rCurr = r.moneda || 'ARS';
+                const discount = Number(r.descuento) || 0;
+
+                const originalDaily = Number(r.montoDiario) || 0;
+                const subtotal = originalDaily * days;
+                const originalTotal = Number(r.montoTotal) || (subtotal * (1 - (discount / 100)));
+                const originalDeposit = Number(r.montoReserva) || 0;
+                const originalBalance = Math.max(0, originalTotal - originalDeposit);
+
+                const convertedDaily = convertAmount(originalDaily, rCurr, globalCurrency);
+                const convertedTotal = convertAmount(originalTotal, rCurr, globalCurrency);
+                const convertedDeposit = convertAmount(originalDeposit, rCurr, globalCurrency);
+                const convertedBalance = convertAmount(originalBalance, rCurr, globalCurrency);
+
+                mobileCardHTML = `
+                    <div class="block md:hidden bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 space-y-4">
+                        
+                        <!-- Encabezado de la Tarjeta Huésped -->
+                        <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                            <div>
+                                <div class="font-extrabold text-slate-900 text-sm leading-tight">${r.nombre || 'Sin Nombre'}</div>
+                                <div class="text-[11px] text-slate-500 font-medium mt-0.5 flex items-center gap-2">
+                                    <span>${r.pasajeros || '1'} pasajeros</span>
+                                    ${r.documento ? `<span>• DNI: ${r.documento}</span>` : ''}
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-bold bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full border border-brand-200 shrink-0">
+                                Moneda: ${rCurr}
+                            </span>
+                        </div>
+
+                        <!-- Fechas de Ingreso y Egreso con Flechas de Ajuste -->
+                        <div class="bg-slate-50/80 rounded-xl p-3 border border-slate-200/70 space-y-2">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fechas de Estadía (${days} noches)</div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <!-- Check-in -->
+                                <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                                    <div>
+                                        <div class="text-[9px] font-bold text-emerald-700 uppercase">Check-in</div>
+                                        <div class="text-xs font-extrabold text-slate-800">${r.checkin}</div>
+                                    </div>
+                                    <div class="flex flex-col leading-none">
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkin', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] p-0.5">▲</button>
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkin', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] p-0.5">▼</button>
+                                    </div>
+                                </div>
+                                <!-- Check-out -->
+                                <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                                    <div>
+                                        <div class="text-[9px] font-bold text-amber-700 uppercase">Check-out</div>
+                                        <div class="text-xs font-extrabold text-slate-800">${r.checkout}</div>
+                                    </div>
+                                    <div class="flex flex-col leading-none">
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkout', 1)" class="text-slate-400 hover:text-brand-600 text-[10px] p-0.5">▲</button>
+                                        <button onclick="adjustReservationDate('${activeProp.id}', ${index}, 'checkout', -1)" class="text-slate-400 hover:text-brand-600 text-[10px] p-0.5">▼</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Valores y Tarifas -->
+                        <div class="grid grid-cols-2 gap-2.5 text-xs">
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase">Tarifa / Noche</label>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <span class="text-slate-400 font-bold">${getCurrencySymbol(globalCurrency)}</span>
+                                    <input type="number" step="any" value="${Math.round(convertedDaily * 100) / 100}" onchange="handleDailyRateChange('${activeProp.id}', ${index}, this.value)" class="w-full bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-extrabold text-slate-800 focus:ring-1 focus:ring-brand-500">
+                                </div>
+                            </div>
+
+                            <div class="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-200/70">
+                                <label class="block text-[10px] font-bold text-indigo-700 uppercase">% Descuento</label>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <input type="number" min="0" max="99" value="${discount || ''}" placeholder="0" onchange="handleDiscountChange('${activeProp.id}', ${index}, this.value)" class="w-full bg-white border border-indigo-200 rounded-lg px-2 py-1 text-xs font-extrabold text-indigo-800 focus:ring-1 focus:ring-indigo-500 text-center">
+                                    <span class="text-indigo-400 font-bold text-xs">%</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase">Total Estadía</label>
+                                <div class="text-sm font-extrabold text-slate-900 mt-1">
+                                    ${formatMoney(convertedTotal, globalCurrency)}
+                                </div>
+                            </div>
+
+                            <div class="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200/70">
+                                <label class="block text-[10px] font-bold text-emerald-800 uppercase">Seña Abonada</label>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <span class="text-slate-400 font-bold">${getCurrencySymbol(globalCurrency)}</span>
+                                    <input type="number" step="any" value="${Math.round(convertedDeposit * 100) / 100}" onchange="handleDepositChange('${activeProp.id}', ${index}, this.value)" class="w-full bg-white border border-emerald-200 rounded-lg px-2 py-1 text-xs font-extrabold text-emerald-800 focus:ring-1 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Saldo Pendiente al Ingreso Destacado -->
+                        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 flex justify-between items-center text-xs">
+                            <span class="font-bold text-amber-900">Saldo Restante al Ingreso:</span>
+                            <span class="font-extrabold text-amber-800 text-sm">${formatMoney(convertedBalance, globalCurrency)}</span>
+                        </div>
+
+                        <!-- Botones de Acción Móvil -->
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                            <button onclick='generateContract(${JSON.stringify(r)})' class="flex-1 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                Ver Contrato
+                            </button>
+                            ${r.telefono ? `
+                                <button onclick="sendGuestWhatsApp('${r.telefono}', '${r.nombre}', '${r.checkin}', '${convertedBalance}', '${globalCurrency}')" class="p-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition shadow-xs" title="Enviar WhatsApp">
+                                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="deleteReservationItem('${activeProp.id}', ${index}, '${r.nombre || 'esta reserva'}', '${r.checkin}')" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition shadow-xs" title="Archivar">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ================= 2. VISTA ESCRITORIO (TABLA COMPLETA HORIZONTAL) =================
+            let desktopTableHTML = `
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
+                                <th class="p-3.5 min-w-[150px]">Huésped</th>
+                                <th class="p-3.5 min-w-[210px]">Fechas (In / Out)</th>
+                                <th class="p-3.5 text-center min-w-[70px]">Noches</th>
+                                <th class="p-3.5 min-w-[135px]">Tarifa / Noche</th>
+                                <th class="p-3.5 min-w-[95px] text-center text-indigo-900">% Desc.</th>
+                                <th class="p-3.5 min-w-[135px]">Total (${getCurrencySymbol(globalCurrency)})</th>
+                                <th class="p-3.5 min-w-[135px]">Seña (${getCurrencySymbol(globalCurrency)})</th>
+                                <th class="p-3.5 min-w-[140px] text-amber-800 bg-amber-50/50">Saldo Restante</th>
+                                <th class="p-3.5 text-center min-w-[120px]">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 font-medium">
             `;
 
             propRes.forEach((r, index) => {
@@ -1036,7 +1220,7 @@
                 const convertedDeposit = convertAmount(originalDeposit, rCurr, globalCurrency);
                 const convertedBalance = convertAmount(originalBalance, rCurr, globalCurrency);
 
-                html += `
+                desktopTableHTML += `
                     <tr class="hover:bg-slate-50/80 transition reservation-row" data-search="${(r.nombre + ' ' + (r.documento||'') + ' ' + (r.telefono||'')).toLowerCase()}">
                         <td class="p-3.5">
                             <div class="font-bold text-slate-900">${r.nombre || 'Sin Nombre'}</div>
@@ -1122,8 +1306,9 @@
                 `;
             });
 
-            html += `</tbody></table>`;
-            container.innerHTML = html;
+            desktopTableHTML += `</tbody></table></div>`;
+
+            container.innerHTML = mobileCardHTML + desktopTableHTML;
             lucide.createIcons();
         }
 
@@ -1243,6 +1428,9 @@
                     const result = await response.json();
                     if (result.status === 'success') {
                         reservations[propId].splice(index, 1);
+                        if (mobileReservationIndex >= reservations[propId].length) {
+                            mobileReservationIndex = Math.max(0, reservations[propId].length - 1);
+                        }
                         renderList();
                         renderCalendars();
                         renderKPIs();
