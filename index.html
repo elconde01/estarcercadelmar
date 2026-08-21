@@ -64,7 +64,7 @@
     <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
             
-            <!-- Logo & Marca -->
+            <!-- Fila Superior: Logo & Bloque Derecho en Móvil -->
             <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl overflow-hidden shadow-md border border-slate-200 bg-white flex items-center justify-center shrink-0">
@@ -79,16 +79,22 @@
                     </div>
                 </div>
 
-                <!-- Estado móvil -->
-                <div class="flex md:hidden items-center gap-2">
-                    <span id="bna-rate-badge-mob" class="text-[10px] font-bold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">USD = $...</span>
+                <!-- BLOQUE DERECHO EN MÓVIL: SINCRONIZADO ARRIBA Y DÓLAR ABAJO -->
+                <div class="flex md:hidden flex-col items-end gap-1 shrink-0">
+                    <span id="sync-status-mobile" class="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold shadow-2xs">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span id="sync-status-mobile-text">Sincronizado</span>
+                    </span>
+                    <span id="bna-rate-badge-mob" onclick="promptManualBnaRate()" class="text-[10px] font-extrabold bg-slate-100 text-slate-800 px-2 py-0.5 rounded-full border border-slate-200/80 shadow-2xs cursor-pointer">
+                        USD = $...
+                    </span>
                 </div>
             </div>
 
-            <!-- Controles y Acciones Superiores -->
+            <!-- Controles y Acciones Superiores (Escritorio / Barra de Navegación) -->
             <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
                 
-                <!-- Cotización BNA Venta -->
+                <!-- Cotización BNA Venta Escritorio -->
                 <div onclick="promptManualBnaRate()" title="Clic para actualizar o editar cotización BNA (Venta)" class="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs">
                     <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>BNA Venta:</span>
@@ -101,7 +107,7 @@
                     <button onclick="setCurrency('USD')" id="curr-btn-usd" class="px-2.5 py-1 text-xs font-extrabold rounded-lg text-slate-500 hover:text-slate-900 transition">USD (U$S)</button>
                 </div>
 
-                <!-- Estado Sincronización -->
+                <!-- Estado Sincronización Escritorio -->
                 <span id="sync-status" class="hidden lg:inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl font-semibold shadow-2xs">
                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                     Sincronizando...
@@ -662,7 +668,7 @@
                 updateSyncBadge("Sincronizado", "emerald");
             } catch (error) {
                 console.error("Error de sincronización:", error);
-                updateSyncBadge("Modo sin conexión", "rose");
+                updateSyncBadge("Sin conexión", "rose");
             }
 
             renderPropertiesSelect();
@@ -675,9 +681,19 @@
 
         function updateSyncBadge(text, color) {
             const el = document.getElementById('sync-status');
+            const elMob = document.getElementById('sync-status-mobile');
+            const elMobText = document.getElementById('sync-status-mobile-text');
+            
             if (el) {
                 el.innerHTML = `<span class="w-2 h-2 rounded-full bg-${color}-500 ${color === 'amber' ? 'animate-pulse' : ''}"></span> ${text}`;
                 el.className = `hidden lg:inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 bg-${color}-50 text-${color}-700 border border-${color}-200 rounded-xl font-semibold shadow-2xs`;
+            }
+
+            if (elMob && elMobText) {
+                elMobText.textContent = text;
+                elMob.className = `inline-flex items-center gap-1 text-[10px] px-2 py-0.5 bg-${color}-50 text-${color}-700 border border-${color}-200 rounded-full font-bold shadow-2xs`;
+                const dot = elMob.querySelector('span:first-child');
+                if (dot) dot.className = `w-1.5 h-1.5 rounded-full bg-${color}-500 ${color === 'amber' ? 'animate-pulse' : ''}`;
             }
         }
 
@@ -994,7 +1010,6 @@
                             <th class="p-3.5 min-w-[210px]">Fechas (In / Out)</th>
                             <th class="p-3.5 text-center min-w-[70px]">Noches</th>
                             <th class="p-3.5 min-w-[135px]">Tarifa / Noche</th>
-                            <!-- COLUMNA % DESCUENTO -->
                             <th class="p-3.5 min-w-[95px] text-center text-indigo-900">% Desc.</th>
                             <th class="p-3.5 min-w-[135px]">Total (${getCurrencySymbol(globalCurrency)})</th>
                             <th class="p-3.5 min-w-[135px]">Seña (${getCurrencySymbol(globalCurrency)})</th>
@@ -1032,10 +1047,8 @@
                             </div>
                         </td>
                         
-                        <!-- FECHAS CON FLECHAS ARRIBA Y ABAJO DÍA POR DÍA -->
                         <td class="p-3.5 text-slate-700 whitespace-nowrap">
                             <div class="flex items-center gap-2 font-bold text-slate-800 tracking-tight text-xs">
-                                <!-- Check-in con flechas -->
                                 <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
                                     <span class="text-slate-400 text-[10px]">In:</span>
                                     <span>${r.checkin}</span>
@@ -1047,7 +1060,6 @@
 
                                 <span class="text-slate-400 font-normal">→</span>
 
-                                <!-- Check-out con flechas -->
                                 <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
                                     <span class="text-slate-400 text-[10px]">Out:</span>
                                     <span>${r.checkout}</span>
@@ -1061,7 +1073,6 @@
 
                         <td class="p-3.5 text-center font-bold text-slate-700 whitespace-nowrap">${days} n</td>
                         
-                        <!-- TARIFA DIARIA -->
                         <td class="p-3.5">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
@@ -1069,7 +1080,6 @@
                             </div>
                         </td>
 
-                        <!-- CAMPO % DESCUENTO (2 DÍGITOS) -->
                         <td class="p-3.5 text-center">
                             <div class="inline-flex items-center gap-1 bg-indigo-50/50 border border-indigo-200/70 px-2 py-1 rounded-lg">
                                 <input type="number" min="0" max="99" value="${discount || ''}" placeholder="0" onchange="handleDiscountChange('${activeProp.id}', ${index}, this.value)" class="w-10 text-center text-xs font-bold text-indigo-700 bg-transparent focus:outline-none">
@@ -1077,12 +1087,10 @@
                             </div>
                         </td>
 
-                        <!-- TOTAL RECALCULADO (CON DESCUENTO) -->
                         <td class="p-3.5 font-extrabold text-slate-900 whitespace-nowrap text-sm">
                             ${formatMoney(convertedTotal, globalCurrency)}
                         </td>
 
-                        <!-- SEÑA -->
                         <td class="p-3.5">
                             <div class="flex items-center gap-1.5">
                                 <span class="text-slate-400 font-bold shrink-0">${getCurrencySymbol(globalCurrency)}</span>
@@ -1090,12 +1098,10 @@
                             </div>
                         </td>
 
-                        <!-- SALDO RESTANTE -->
                         <td class="p-3.5 font-extrabold text-amber-800 bg-amber-50/40 whitespace-nowrap text-sm">
                             ${formatMoney(convertedBalance, globalCurrency)}
                         </td>
 
-                        <!-- ACCIONES -->
                         <td class="p-3.5">
                             <div class="flex items-center justify-center gap-1.5">
                                 <button onclick='generateContract(${JSON.stringify(r)})' title="Ver Contrato" class="px-2.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-brand-200/60 shadow-2xs">
