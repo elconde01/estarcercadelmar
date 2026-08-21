@@ -56,6 +56,34 @@
                 background-attachment: fixed !important;
             }
         }
+
+        /* ── Animaciones de Carrusel Táctil ── */
+        #mobile-card-viewport {
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes slideInFromRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to   { transform: translateX(0);     opacity: 1; }
+        }
+        @keyframes slideOutToLeft {
+            from { transform: translateX(0);    opacity: 1; }
+            to   { transform: translateX(-100%); opacity: 0; }
+        }
+        @keyframes slideOutToRight {
+            from { transform: translateX(0);   opacity: 1; }
+            to   { transform: translateX(100%); opacity: 0; }
+        }
+
+        .carousel-slide-in-right  { animation: slideInFromRight  0.28s cubic-bezier(.4,0,.2,1) forwards; }
+        .carousel-slide-in-left   { animation: slideInFromLeft   0.28s cubic-bezier(.4,0,.2,1) forwards; }
+        .carousel-slide-out-left  { animation: slideOutToLeft    0.28s cubic-bezier(.4,0,.2,1) forwards; }
+        .carousel-slide-out-right { animation: slideOutToRight   0.28s cubic-bezier(.4,0,.2,1) forwards; }
     </style>
 </head>
 <body class="min-h-full bg-slate-50 text-slate-800 font-sans antialiased flex flex-col selection:bg-brand-500 selection:text-white" onload="initApp()">
@@ -1013,25 +1041,55 @@
             calculateModalTotals();
         }
 
-        /* Paginación y Gestos Móviles */
+        /* ── Paginación con Animación Real de Carrusel ── */
+
+        function animateCarousel(direction, callback) {
+            // direction: 'left' = va a la siguiente (sale por izq, entra por der)
+            //            'right' = va a la anterior (sale por der, entra por izq)
+            const viewport = document.getElementById('mobile-card-viewport');
+            const card    = document.getElementById('mobile-swipe-card');
+            if (!card || !viewport) { callback(); return; }
+
+            const outClass = direction === 'left' ? 'carousel-slide-out-left' : 'carousel-slide-out-right';
+            const inClass  = direction === 'left' ? 'carousel-slide-in-right' : 'carousel-slide-in-left';
+
+            // 1. Anima la salida de la tarjeta actual
+            card.classList.add(outClass);
+
+            card.addEventListener('animationend', function onOut() {
+                card.removeEventListener('animationend', onOut);
+                // 2. Cambia el índice y re-renderiza
+                callback();
+                // 3. Anima la entrada de la nueva tarjeta
+                const newCard = document.getElementById('mobile-swipe-card');
+                if (newCard) {
+                    newCard.classList.add(inClass);
+                    newCard.addEventListener('animationend', function onIn() {
+                        newCard.removeEventListener('animationend', onIn);
+                        newCard.classList.remove(inClass);
+                    }, { once: true });
+                }
+            }, { once: true });
+        }
+
         function prevMobileReservation() {
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             const propRes = (activeProp && reservations[activeProp.id]) ? reservations[activeProp.id] : [];
-            if (propRes.length === 0) return;
-            if (mobileReservationIndex > 0) {
+            if (propRes.length === 0 || mobileReservationIndex <= 0) return;
+            animateCarousel('right', () => {
                 mobileReservationIndex--;
                 renderList();
-            }
+            });
         }
 
         function nextMobileReservation() {
             const activeProp = properties.find(p => String(p.id) === String(activePropertyId));
             const propRes = (activeProp && reservations[activeProp.id]) ? reservations[activeProp.id] : [];
-            if (propRes.length === 0) return;
-            if (mobileReservationIndex < propRes.length - 1) {
+            if (propRes.length === 0 || mobileReservationIndex >= propRes.length - 1) return;
+            animateCarousel('left', () => {
                 mobileReservationIndex++;
                 renderList();
-            }
+            });
         }
 
         function handleTouchStart(e) {
@@ -1049,13 +1107,13 @@
             const diffX = touchEndX - touchStartX;
             const diffY = touchEndY - touchStartY;
 
-            // Verificamos que sea un deslizamiento horizontal predominante
+            // Solo si el gesto es predominantemente horizontal y supera el umbral
             if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
                 if (diffX < 0) {
-                    // Deslizar a la izquierda -> Siguiente reserva
+                    // Deslizar a la izquierda → siguiente reserva (entra por la derecha)
                     nextMobileReservation();
                 } else {
-                    // Deslizar a la derecha -> Reserva anterior
+                    // Deslizar a la derecha → reserva anterior (entra por la izquierda)
                     prevMobileReservation();
                 }
             }
@@ -1112,10 +1170,11 @@
                 const convertedBalance = convertAmount(originalBalance, rCurr, globalCurrency);
 
                 mobileCardHTML = `
-                    <div id="mobile-swipe-card" 
-                         ontouchstart="handleTouchStart(event)" 
-                         ontouchend="handleTouchEnd(event)" 
-                         class="block md:hidden bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 space-y-4 select-none transition-all duration-200 active:scale-[0.99]">
+                    <div id="mobile-card-viewport" class="block md:hidden"
+                         ontouchstart="handleTouchStart(event)"
+                         ontouchend="handleTouchEnd(event)">
+                    <div id="mobile-swipe-card"
+                         class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 space-y-4 select-none">
                         
                         <!-- Encabezado de la Tarjeta Huésped -->
                         <div class="flex justify-between items-start border-b border-slate-100 pb-3">
@@ -1216,6 +1275,7 @@
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </div>
+                     </div>
                     </div>
                 `;
             }
